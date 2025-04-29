@@ -3,12 +3,34 @@ import { useState, useEffect } from 'react';
 
 function App() {
   const [schoolCourses, setSchoolCourses] = useState({});
-    useEffect(() => {
-      fetch("https://script.google.com/macros/s/AKfycbwgoZ0oDPg9j9YYFJQwCyTEOZKxwikSFoP5VVekp_KOqCtHXhuihmeWVdCmjaezmOKIzw/exec")
-        .then((res) => res.json())
-        .then((data) => setSchoolCourses(data))
-        .catch((err) => console.error("Failed to load course data", err));
-    }, []);
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchCourses = async () => {
+    const cachedData = sessionStorage.getItem('schoolCourses');
+
+    if (cachedData) {
+      console.log("Loaded from cache");
+      setSchoolCourses(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      console.log("Fetching from server...");
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxRIj1tAaRyS_OifPH_w6m-QjrN-9KNo2LmIVzTl6ZYYfXJZFuJikSsMwK-FQkONbI89A/exec");
+        const data = await res.json();
+        setSchoolCourses(data);
+        sessionStorage.setItem('schoolCourses', JSON.stringify(data));
+      } catch (err) {
+        console.error("Failed to load course data", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  fetchCourses();
+}, []);
+
 
 
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -66,12 +88,12 @@ function App() {
 
   const allCourses = selectedSchool ? schoolCourses[selectedSchool] || [] : [];
 
-  const courses = allCourses.filter(course => {
-    if (!course) return false;
-  
-    const grade = course[3];
-    const pathway = course[4].toUpperCase();
-    const subject = getSubjectFromCode(course);
+  const courses = allCourses.filter(({ code }) => {
+    if (!code) return false;
+    
+    const grade = code[3];
+    const pathway = code[4].toUpperCase();
+    const subject = getSubjectFromCode(code);
   
     const matchesGrade =
       selectedGrade === '' || grade === selectedGrade;
@@ -87,18 +109,19 @@ function App() {
       selectedSubjects.length === 0 || selectedSubjects.includes(subject);
   
     const matchesSearch =
-      searchTerm === '' || course.toLowerCase().includes(searchTerm.toLowerCase());
+      searchTerm === '' || (code + (schoolCourses[selectedSchool]?.find(c => c.code === code)?.name || "")).toLowerCase().includes(searchTerm.toLowerCase());
+  
     const matchesPostSecondaryReq =
       postSecondaryRequirement === '' ||
       (postSecondaryRequirement === 'McMaster Health Science: non-math, non-science, non-tech' &&
-        !['M', 'S', 'I', 'T'].includes(course[0]) &&
-        !course.startsWith('ENG4U')
-        && (pathway === 'U' || pathway === 'M')
-        &&course[3]==="4");
-    
+        !['M', 'S', 'I', 'T'].includes(code[0]) &&
+        !code.startsWith('ENG4U') &&
+        (pathway === 'U' || pathway === 'M') &&
+        grade === "4");
   
-    return matchesGrade && matchesPathway && matchesSubject && matchesSearch && matchesPostSecondaryReq && (!frenchImmersion || course.endsWith("4"));
+    return matchesGrade && matchesPathway && matchesSubject && matchesSearch && matchesPostSecondaryReq && (!frenchImmersion || code.endsWith("4"));
   });
+  
   useEffect(() => {
     if (!touchedCourseList && selectedSchool === '') {
       setTouchedCourseList(true);
@@ -173,7 +196,7 @@ function App() {
               <option value="Abbey Park High School">Abbey Park High School</option>
               <option value="Acton District School">Acton District School</option>
               <option value="Aldershot High School">Aldershot High School</option>
-              <option value="Burligton Central High School">Burligton Central High School</option>
+              <option value="Burlington Central High School">Burlington Central High School</option>
               <option value="Craig Kielburger Secondary School">Craig Kielburger Secondary School</option>
               <option value="Dr. Frank J. Hayden Secondary School">Dr. Frank J. Hayden Secondary School</option>
               <option value="Elsie MacGill Secondary School">Elsie MacGill Secondary School</option>
@@ -311,32 +334,41 @@ function App() {
         {/* Course List */}
         
         <div className="flex-grow w-full h-full overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-200 text-sm text-black">
-        <h2 className="text-2xl font-semibold mb-4">Courses</h2>
-          <ul className="space-y-2">
-            
-            {!selectedSchool ? (
-              <li className="text-gray-500 italic text-center">
-                Please select a school to retrieve courses.
-              </li>
-            ) : courses.length > 0 ? (
-              courses.map((course) => (
-                <li key={course}>
-                  <button
-                    onClick={() => handleCourseClick(course)}
-                    className="text-blue-700 hover:underline"
-                  >
-                    {course}
-                  </button>
-                </li>
-              ))
-            ) : (
-              <li className="text-gray-500 italic text-center">
-                There are no courses which match your filter.
-              </li>
-            )}
-          </ul>
+  <h2 className="text-2xl font-semibold mb-4 text-center">Courses</h2>
 
-        </div>
+  {loading ? (
+    <p className="text-center text-gray-500 mt-4">Loading courses...</p>
+  ) : (
+    <div className="flex flex-col items-center ml-96"> {/* 🛠 Center the whole list */}
+      <ul className="space-y-2 w-full max-w-xl"> {/* 🛠 Limit width for better centering */}
+        {!selectedSchool ? (
+          <li className="text-gray-500 italic text-center">
+            Please select a school to retrieve courses.
+          </li>
+        ) : courses.length > 0 ? (
+          courses.map(({ code, name }) => (
+            <li key={code} className="text-left">
+              <button
+                onClick={() => handleCourseClick(code)}
+                className="flex w-full text-left items-center space-x-0 text-blue-700 hover:underline"
+              >
+                {/* Code on the left */}
+                <span className="w-20">{code}</span> {/* Fixed width for code */}
+                {/* Name right after */}
+                <span className="flex-1">{name}</span>
+              </button>
+            </li>
+          ))
+        ) : (
+          <li className="text-gray-500 italic text-center">
+            There are no courses which match your filter.
+          </li>
+        )}
+      </ul>
+    </div>
+  )}
+</div>
+
       </header>
 
       {/* Sidebar */}
@@ -434,6 +466,11 @@ function App() {
 
               {courseDetails && courseDetails !== "none" && courseDetails !== "error" && (
                 <>
+                 {courseDetails.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase() && (
+                  <p className="text-red-200">
+                    No information on {selectedCourse} at {selectedSchool}, using other sources
+                  </p>
+                )}
                   <p className="text-sm text-gray-300 italic mb-2">
                     Based on data from {courseDetails.school}, {courseDetails.year}
                   </p>
