@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 function App() {
   const [schoolCourses, setSchoolCourses] = useState({});
 const [loading, setLoading] = useState(true);
+const currentYear = new Date().getFullYear();
+const minValidYear = currentYear - 2;
 
 useEffect(() => {
   const fetchCourses = async () => {
@@ -16,7 +18,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxRIj1tAaRyS_OifPH_w6m-QjrN-9KNo2LmIVzTl6ZYYfXJZFuJikSsMwK-FQkONbI89A/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbw6cZQ0V0ndwD5PgpsbjeC_lbbQc9bYmrb_ZFkMimh88I1fHa6f098vo3fjxdblKbWJjQ/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -50,7 +52,7 @@ useEffect(() => {
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbwoZ-xrd2YAsyrDr-HJEzrTOx-OKZeMt3xcuWTHFJasIsNizRDxc_dQeZijN15coZacyQ/exec?course=${course}&school=${selectedSchool}`
+      `https://script.google.com/macros/s/AKfycbw6cZQ0V0ndwD5PgpsbjeC_lbbQc9bYmrb_ZFkMimh88I1fHa6f098vo3fjxdblKbWJjQ/exec?course=${course}&school=${selectedSchool}`
     )
       .then((res) => res.json())
       .then((result) => {
@@ -100,9 +102,9 @@ useEffect(() => {
   
     const matchesPathway =
       selectedPathway === '' ||
-      (selectedPathway === 'University' && (pathway === 'U' || pathway === 'M')) ||
-      (selectedPathway === 'College' && (pathway === 'C' || pathway === 'U' || pathway === 'M')) ||
-      (selectedPathway === 'Apprenticeship' && (pathway === 'C' || pathway === 'U' || pathway === 'M')) ||
+      (selectedPathway === 'University' && (pathway === 'D' ||pathway === 'W' ||pathway === 'U' || pathway === 'M')) ||
+      (selectedPathway === 'College' && (pathway !== 'L' &&pathway !== 'E')) ||
+      (selectedPathway === 'Apprenticeship' && (pathway !== 'L' &&pathway !== 'E')) ||
       (selectedPathway === 'Workplace');
   
     const matchesSubject =
@@ -342,7 +344,7 @@ useEffect(() => {
     <div className="flex flex-col items-center ml-96"> {/* 🛠 Center the whole list */}
       <ul className="space-y-2 w-full max-w-xl"> {/* 🛠 Limit width for better centering */}
         {!selectedSchool ? (
-          <li className="text-gray-500 italic text-center">
+          <li className="text-gray-500 italic text-center mr-96">
             Please select a school to retrieve courses.
           </li>
         ) : courses.length > 0 ? (
@@ -360,7 +362,7 @@ useEffect(() => {
             </li>
           ))
         ) : (
-          <li className="text-gray-500 italic text-center">
+          <li className="text-gray-500 italic text-center mr-96">
             There are no courses which match your filter.
           </li>
         )}
@@ -398,14 +400,14 @@ useEffect(() => {
               Consider challenging yourself
             </p>
             <ul className="list-disc list-inside space-y-3 text-base text-left">
-              <li>Compare academic vs applied classes; going for academic leaves room for flexibility in the future.</li>
+              <li>Compare academic vs applied classes; choosing academic leaves room for flexibility in the future, and often isn't as challenging as you may think.</li>
               <li>Look for classes that will teach you life skills; you may not ace them, but it will benefit you in the long run.</li>
             </ul>
             <p className='text-xl'>
             Ask Questions
             </p>
             <ul className="list-disc list-inside space-y-3 text-base text-left">
-              <li>This website doesn't have all the information.</li>
+              <li>This website doesn't have all the information, and isn't always up to date.</li>
               <li>Ask teachers what their courses are like.</li>
               <li>Ask upper-grade peers what they thought of their classes.</li>
             </ul>
@@ -456,6 +458,22 @@ useEffect(() => {
 
               {courseDetails === null && (
                 <p className="text-gray-400 italic">Loading activities…</p>
+              )}
+              {(courseDetails === "none"||  
+                (courseDetails && courseDetails !== "none" && courseDetails !== "error" &&((courseDetails.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()))) || 
+                (courseDetails && courseDetails !== "none" && courseDetails !== "error" && (courseDetails.year < minValidYear))
+              ) && (
+                <div className="mt-4 p-4 border border-yellow-400 bg-yellow-50 rounded-xl">
+                  <p className="text-md font-semibold text-yellow-700">Have you taken this course? Is the following information outdated, incorrect, or missing?</p>
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSfTqM4Z-KCO-kVblD7HByEi4BQgQrUGiKjR4f-FJQ_unxQmig/viewform?usp=header"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600 transition"
+                  >
+                    Suggest an addition
+                  </a>
+                </div>
               )}
 
               {courseDetails === "none" && (
