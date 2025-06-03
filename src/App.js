@@ -6,7 +6,9 @@ function App() {
 const [loading, setLoading] = useState(true);
 const currentYear = new Date().getFullYear();
 const minValidYear = currentYear - 2;
-
+   useEffect(() => {
+     document.title = "Course Information HDSB";
+   }, []);
 useEffect(() => {
   const fetchCourses = async () => {
     const cachedData = sessionStorage.getItem('schoolCourses');
@@ -34,7 +36,6 @@ useEffect(() => {
 }, []);
 
 
-
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [touchedCourseList, setTouchedCourseList] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState('');
@@ -43,6 +44,8 @@ useEffect(() => {
   const [postSecondaryRequirement, setPostSecondaryRequirement] = useState('');
   const [frenchImmersion, setFrenchImmersion] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
 
   
   const handleCourseClick = (course) => {
@@ -161,6 +164,11 @@ useEffect(() => {
           />
           myBlueprint
         </a>
+        <button
+          onClick={() => setShowDisclaimer(true)}
+          className="flex items-center gap-2 hover:underline text-blue-700">
+            Disclaimer
+        </button>
       </div>
       <header className="App-header flex flex-col flex-grow items-center space-y-6 p-6">
         <div className="absolute top-12 right-4">
@@ -280,7 +288,7 @@ useEffect(() => {
 
           <div className="flex flex-col gap-6 justify-center items-center">
             <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base">
-              <option value="">SHSM Major Credit</option>
+              <option value="">Coming Soon: SHSM Major Credit</option>
               <option value="Agriculture and Veterinary">Agriculture and Veterinary</option>
               <option value="Arts and Culture">Arts and Culture</option>
               <option value="Business">Business</option>
@@ -341,28 +349,43 @@ useEffect(() => {
   {loading ? (
     <p className="text-center text-gray-500 mt-4">Loading courses...</p>
   ) : (
-    <div className="flex flex-col items-center ml-96"> {/* 🛠 Center the whole list */}
+    <div className="flex flex-col items-center mx-auto"> {/* 🛠 Center the whole list */}
       <ul className="space-y-2 w-full max-w-xl"> {/* 🛠 Limit width for better centering */}
         {!selectedSchool ? (
-          <li className="text-gray-500 italic text-center mr-96">
+          <li className="text-gray-500 italic text-center">
             Please select a school to retrieve courses.
           </li>
         ) : courses.length > 0 ? (
-          courses.map(({ code, name }) => (
-            <li key={code} className="text-left">
-              <button
-                onClick={() => handleCourseClick(code)}
-                className="flex w-full text-left items-center space-x-0 text-blue-700 hover:underline"
-              >
-                {/* Code on the left */}
-                <span className="w-20">{code}</span> {/* Fixed width for code */}
-                {/* Name right after */}
-                <span className="flex-1">{name}</span>
-              </button>
-            </li>
-          ))
+          <div className="flex flex-col items-center mx-auto">
+  <ul className="space-y-2 w-full max-w-xl">
+    {courses.map(({ code, name }) => (
+      <li key={code} className="w-full flex justify-center items-center space-x-4"> {/* ✅ Make a row */}
+        
+        {/* Centered Course Code Button */}
+        <div className="flex justify-center w-24"> {/* ✅ Center the button */}
+          <button
+            onClick={() => handleCourseClick(code)}
+            className="text-blue-700 hover:underline text-center"
+          >
+            {code}
+          </button>
+        </div>
+
+        {/* Course Name Button */}
+        <button
+          onClick={() => handleCourseClick(code)}
+          className="flex-1 text-left text-blue-700 hover:underline truncate max-w-[16rem]"
+          title={name}
+        >
+          {name}
+        </button>
+
+      </li>
+    ))}
+  </ul>
+</div>
         ) : (
-          <li className="text-gray-500 italic text-center mr-96">
+          <li className="text-gray-500 italic text-center">
             There are no courses which match your filter.
           </li>
         )}
@@ -417,7 +440,30 @@ useEffect(() => {
           </div>
         </div>
       )}
+      {showDisclaimer && (
+        <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
+          <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Disclaimer</h2>
+              <button
+                onClick={() => setShowDisclaimer(false)}
+                className="text-red-500 hover:underline text-lg"
+              >
+                Close ✕
+              </button>
+            </div>
 
+            <hr className="border-gray-400" />
+            <div className="flex gap-2 text-gray-300 justify-center">
+                  <span>This website is created and maintained by a student as an independent project. It is not an official resource of the Halton District School Board (HDSB), and the information provided here may not always be up to date or accurate. While every effort is made to ensure the reliability of the content, users should verify any details with official sources before making decisions based on this website. The site and its creator assume no responsibility for errors, omissions, or any actions taken based on the information provided.
+For official HDSB curriculum and policies, please visit HDSB's official website.
+</span>
+                 
+                </div>
+            
+          </div>
+        </div>
+      )}
       {selectedCourse && (
         <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
           <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
@@ -440,7 +486,7 @@ useEffect(() => {
             {courseDetails && courseDetails !== "none" && courseDetails !== "error" ? (
               <div>{courseDetails.name}</div>
             ) : (
-              <div>No course info available.</div>
+              <div>No course name available.</div>
             )}
 
 
@@ -449,7 +495,17 @@ useEffect(() => {
               <h3 className="text-xl font-semibold mb-2">What You <span className="text-green-400">WILL</span> See (Curriculum)</h3>
               <ul className="list-disc list-inside space-y-1 text-gray-300">
                 <li>Unit topics pulled from Ministry curriculum</li>
-                <li>Example questions generated by AI</li>
+                <div className="flex gap-2 text-gray-300 justify-center">
+                  <span>Need more information?</span>
+                  <a 
+                    href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline text-blue-400"
+                  >
+                    Check the course curriculum
+                  </a>
+                </div>
               </ul>
             </section>
 
