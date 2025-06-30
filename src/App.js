@@ -20,7 +20,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbw6cZQ0V0ndwD5PgpsbjeC_lbbQc9bYmrb_ZFkMimh88I1fHa6f098vo3fjxdblKbWJjQ/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbzXHucX4226sqKIVA97yrZy1ZPubT8LJsR7gBn0xIXfTTMfAjLfav8VYzMF5it90maj/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -45,26 +45,57 @@ useEffect(() => {
   const [frenchImmersion, setFrenchImmersion] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [showCurriculum, setShowCurriculum] = useState(false);
 
 
   
-  const handleCourseClick = (course) => {
+  const handleCourseClick = (course, name) => {
     setSelectedCourse(course);
     setCourseDetails(null); // clear previous data
   
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbw6cZQ0V0ndwD5PgpsbjeC_lbbQc9bYmrb_ZFkMimh88I1fHa6f098vo3fjxdblKbWJjQ/exec?course=${course}&school=${selectedSchool}`
+      `https://script.google.com/macros/s/AKfycbzXHucX4226sqKIVA97yrZy1ZPubT8LJsR7gBn0xIXfTTMfAjLfav8VYzMF5it90maj/exec?course=${course}&school=${selectedSchool}`
     )
       .then((res) => res.json())
       .then((result) => {
-        if (result.found === "school" || result.found === "other") {
-          setCourseDetails(result.data);
-        } else {
-          setCourseDetails("none");
-        }
-      })
+  console.log("Raw result from Apps Script:", result);
+
+  if (
+  result.found === "school" || 
+  result.found === "other" || 
+  result.found === "schoolPrefix" || 
+  result.found === "otherPrefix"
+) {
+
+    const safeData = result.data || {};
+    setCourseDetails({
+  ...safeData,
+  curriculum: result.curriculum || [],
+  alias: result.alt?.alias || null,
+  sourceSchool: result.alt?.sourceSchool || null,
+  sourceCode: result.alt?.sourceCode || null,
+  curriculumSource: result.alt?.curriculumSource || null
+});
+  } else {
+  setCourseDetails({
+    name: name,
+    curriculum: result.curriculum || [],
+    curriculumSource: result.alt?.curriculumSource || null,
+    activities: [],
+    similars: [],
+    differences: "",
+    notes: "",
+    school: "",
+    year: "",
+  });
+}
+
+})
+
+
+
       .catch((err) => {
         console.error("Failed to load course info", err);
         setCourseDetails("error");
@@ -122,7 +153,9 @@ useEffect(() => {
         !['M', 'S', 'I', 'T'].includes(code[0]) &&
         !code.startsWith('ENG4U') &&
         (pathway === 'U' || pathway === 'M') &&
-        grade === "4");
+        grade === "4")||
+        (postSecondaryRequirement === '2 of 3: Chemistry, Physics, Biology' &&
+        (code.startsWith('SBI4U') || code.startsWith('SCH4U') ||code.startsWith('SPH4U')));
   
     return matchesGrade && matchesPathway && matchesSubject && matchesSearch && matchesPostSecondaryReq && (!frenchImmersion || code.endsWith("4"));
   });
@@ -169,6 +202,14 @@ useEffect(() => {
           className="flex items-center gap-2 hover:underline text-blue-700">
             Disclaimer
         </button>
+        <a
+          href="https://docs.google.com/forms/d/e/1FAIpQLSfCo2vjguN7kOOcSBzT8sBkt4CNI5-4-UHlnZM9WVc_SJU-ww/viewform?usp=header"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 hover:underline text-blue-700"
+        >
+          Give Website Feedback
+        </a>
       </div>
       <header className="App-header flex flex-col flex-grow items-center space-y-6 p-6">
         <div className="absolute top-12 right-4">
@@ -189,20 +230,20 @@ useEffect(() => {
         />
 
         <p className="text-2xl font-semibold">Or Filter By:</p>
-
-        <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-          
-          <div className="flex flex-col md:flex-column gap-6 justify-center items-center">
-          <select
-            className={`px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black text-base ${
-              !selectedSchool && touchedCourseList
-                ? 'border-4 border-red-500 focus:ring-red-500 ring-5'
-                : 'border-gray-300 focus:ring-blue-400'
-            }`}
-            value={selectedSchool}
-            onChange={(e) => setSelectedSchool(e.target.value)}
-          >
-              <option value="">Select School</option>
+<div className="flex flex-col md:flex-row gap-4 justify-center items-start">
+  {/* LEFT COLUMN */}
+  <div className="flex flex-col gap-6 justify-center items-center">
+    {/* School Selector */}
+    <select
+      className={`px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black text-base ${
+        !selectedSchool && touchedCourseList
+          ? 'border-4 border-red-500 focus:ring-red-500 ring-5'
+          : 'border-gray-300 focus:ring-blue-400'
+      }`}
+      value={selectedSchool}
+      onChange={(e) => setSelectedSchool(e.target.value)}
+    >
+      <option value="">Select School</option>
               <option value="Abbey Park High School">Abbey Park High School</option>
               <option value="Acton District School">Acton District School</option>
               <option value="Aldershot High School">Aldershot High School</option>
@@ -219,32 +260,37 @@ useEffect(() => {
               <option value="Oakville Trafalgar High School">Oakville Trafalgar High School</option>
               <option value="T.A. Blakelock High School">T.A. Blakelock High School</option>
               <option value="White Oaks Secondary School">White Oaks Secondary School</option>
+    </select>
 
-            </select>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base"
-              value={selectedPathway}
-              onChange={(e) => setSelectedPathway(e.target.value)}
-            >
-              <option value="">All Pathways</option>
-              <option value="University">University</option>
-              <option value="College">College</option>
-              <option value="Apprenticeship">Apprenticeship</option>
-              <option value="Workplace">Workplace</option>
-            </select>
+    {/* Pathway */}
+    <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base"
+      value={selectedPathway}
+      onChange={(e) => setSelectedPathway(e.target.value)}
+    >
+      <option value="">All Pathways</option>
+      <option value="University">University</option>
+      <option value="College">College</option>
+      <option value="Apprenticeship">Apprenticeship</option>
+      <option value="Workplace">Workplace</option>
+    </select>
 
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base"
-              value={selectedGrade}
-              onChange={(e) => setSelectedGrade(e.target.value)}
-            >
-              <option value="">All Grades</option>
-              <option value="1">9</option>
-              <option value="2">10</option>
-              <option value="3">11</option>
-              <option value="4">12</option>
-            </select>
-          </div>
-            
-          <div className="mt-4 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4 max-w-md md:w-[20rem] bg-white text-sm text-black space-y-2">
+    {/* Grade */}
+    <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base"
+      value={selectedGrade}
+      onChange={(e) => setSelectedGrade(e.target.value)}
+    >
+      <option value="">All Grades</option>
+      <option value="1">9</option>
+      <option value="2">10</option>
+      <option value="3">11</option>
+      <option value="4">12</option>
+    </select>
+
+    
+  </div>
+
+  {/* MIDDLE COLUMN (Subjects) */}
+    <div className="mt-4 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4 max-w-md md:w-[20rem] bg-white text-sm text-black space-y-2">
             <div className="grid grid-cols-1 gap-2">
               <label className="flex items-center gap-2">
                 <input
@@ -285,61 +331,50 @@ useEffect(() => {
               ))}
             </div>
           </div>
+    
+  {/* RIGHT COLUMN (Filters) */}
+  <div className="flex flex-col gap-6 justify-center items-center">
+    {/* SHSM selector commented out */}
+    {/*
+    <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base">
+      <option value="">Coming Soon: SHSM Major Credit</option>
+      ...
+    </select>
+    */}
+{/* Post-Secondary Requirement */}
+    <select
+      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base"
+      value={postSecondaryRequirement}
+      onChange={(e) => setPostSecondaryRequirement(e.target.value)}
+    >
+      <option value="">Unique Post-Secondary Requirement</option>
+      <option value="McMaster Health Science: non-math, non-science, non-tech">
+        McMaster Health Science: non-math, non-science, non-tech
+      </option>
+      <option value="2 of 3: Chemistry, Physics, Biology">
+        2 of 3: Chemistry, Physics, Biology
+      </option>
+    </select>
+    {/* French Immersion + Clear Filters */}
+    <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
+      <label className="flex items-center gap-2 text-black text-sm">
+        <input
+          type="checkbox"
+          checked={frenchImmersion}
+          onChange={() => setFrenchImmersion((prev) => !prev)}
+        />
+        <span>French Immersion Credit</span>
+      </label>
+    </div>
 
-          <div className="flex flex-col gap-6 justify-center items-center">
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base">
-              <option value="">Coming Soon: SHSM Major Credit</option>
-              <option value="Agriculture and Veterinary">Agriculture and Veterinary</option>
-              <option value="Arts and Culture">Arts and Culture</option>
-              <option value="Business">Business</option>
-              <option value="Information and Communications Technology">Information and Communications Technology</option>
-              <option value="Construction">Construction</option>
-              <option value="Energy">Energy</option>
-              <option value="Environment">Environment</option>
-              <option value="Health and Wellness">Health and Wellness</option>
-              <option value="Horticulture and Landscaping">Horticulture and Landscaping</option>
-              <option value="Hospitality and Tourism">Hospitality and Tourism</option>
-              <option value="Justice, Community Safety & Emergency Services">Justice, Community Safety & Emergency Services</option>
-              <option value="Manufacturing, Engineering and Robotics">Manufacturing, Engineering and Robotics</option>
-              <option value="Sports">Sports</option>
-              <option value="Social Justice">Social Justice</option>
-              <option value="Transportation">Transportation</option>
-            </select>
-
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base"
-              value={postSecondaryRequirement}
-              onChange={(e) => setPostSecondaryRequirement(e.target.value)}
-            >
-              <option value="">Post-Secondary Requirement</option>
-              <option value="McMaster Health Science: non-math, non-science, non-tech">
-                McMaster Health Science: non-math, non-science, non-tech
-              </option>
-            </select>
-
-            {/* French Immersion + Clear Filters */}
-            <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-            <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
-              <label className="flex items-center gap-2 text-black text-sm">
-                <input
-                  type="checkbox"
-                  checked={frenchImmersion}
-                  onChange={() => setFrenchImmersion((prev) => !prev)}
-                />
-                <span>French Immersion Credit</span>
-              </label>
-            </div>
-            <button
-                onClick={() => window.location.reload()}
-                className="px-2 py-1 bg-red-200 text-black text-sm rounded-md hover:bg-red-100"
-              >
-                Clear All Filters
-              </button>
-            </div>
-            
-          </div>
-
-        </div>
+    <button
+      onClick={() => window.location.reload()}
+      className="px-2 py-1 bg-red-200 text-black text-sm rounded-md hover:bg-red-100"
+    >
+      Clear All Filters
+    </button>
+  </div>
+</div>
 
         {/* Course List */}
         
@@ -364,7 +399,7 @@ useEffect(() => {
         {/* Centered Course Code Button */}
         <div className="flex justify-center w-24"> {/* ✅ Center the button */}
           <button
-            onClick={() => handleCourseClick(code)}
+            onClick={() => handleCourseClick(code, name)}
             className="text-blue-700 hover:underline text-center"
           >
             {code}
@@ -373,7 +408,7 @@ useEffect(() => {
 
         {/* Course Name Button */}
         <button
-          onClick={() => handleCourseClick(code)}
+          onClick={() => handleCourseClick(code, name)}
           className="flex-1 text-left text-blue-700 hover:underline truncate max-w-[16rem]"
           title={name}
         >
@@ -465,12 +500,22 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
         </div>
       )}
       {selectedCourse && (
-        <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
+        <div className="fixed top-0 right-0 h-full w-full md:w-full bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
           <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
             
             {/* Header */}
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Course: {selectedCourse}</h2>
+              <h2 className="text-2xl font-bold">
+  {selectedCourse}
+  {courseDetails === null ? (
+    <span className="text-gray-400 italic">: Loading name…</span>
+  ) : courseDetails === "none" || courseDetails === "error" ? (
+    <span className="text-gray-400 italic">: No course name available</span>
+  ) : courseDetails.name ? (
+    <span>: {courseDetails.name}</span>
+  ) : null}
+</h2>
+
               <button
                 onClick={closeSidebar}
                 className="text-red-400 hover:underline text-lg"
@@ -481,36 +526,59 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
 
             {/* Divider */}
             <hr className="border-gray-600" />
-
-            {/* Course Overview */}
-            {courseDetails && courseDetails !== "none" && courseDetails !== "error" ? (
-              <div>{courseDetails.name}</div>
-            ) : (
-              <div>No course name available.</div>
-            )}
-
-
             {/* What You Will See */}
             <section>
-              <h3 className="text-xl font-semibold mb-2">What You <span className="text-green-400">WILL</span> See (Curriculum)</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-300">
-                <li>Unit topics pulled from Ministry curriculum</li>
-                <div className="flex gap-2 text-gray-300 justify-center">
-                  <span>Need more information?</span>
-                  <a 
-                    href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline text-blue-400"
-                  >
-                    Check the course curriculum
-                  </a>
-                </div>
-              </ul>
-            </section>
+  <h3
+  className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+  onClick={() => setShowCurriculum((prev) => !prev)}
+>
+  {showCurriculum ? 'Hide' : 'Show'} Curriculum Breakdown {showCurriculum ? '▼' : '▶'}
+</h3>
+
+{showCurriculum && (
+  <>
+  
+    {courseDetails === null ? (
+      <p className="text-gray-400 italic">Loading curriculum…</p>
+    ) : typeof courseDetails === "object" &&
+      Array.isArray(courseDetails.curriculum) &&
+      courseDetails.curriculum.length > 0 ? (
+        <>{courseDetails.curriculumSource &&
+ courseDetails.curriculumSource.toUpperCase() !== selectedCourse.toUpperCase() &&
+ !selectedCourse.toUpperCase().startsWith(courseDetails.curriculumSource.toUpperCase()) && (
+  <p className="text-yellow-300 italic text-sm mb-2">
+    No curriculum found for {selectedCourse}. Showing curriculum from {courseDetails.curriculumSource}.
+  </p>
+)}
+
+
+      <ul className="list-none list-inside space-y-2 text-gray-100 text-left">
+        {courseDetails.curriculum.map((item, idx) => (
+          <li key={idx}>{item}</li>
+        ))}
+        <div className="flex gap-2 text-white justify-center">
+          <span>Need more information?</span>
+          <a 
+            href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline text-blue-300"
+          >
+            Check the course curriculum
+          </a>
+        </div>
+      </ul></>
+    ) : (
+      <p className="text-gray-300 italic">No curriculum topics found.</p>
+    )}
+  </>
+)}
+
+</section>
+
 
             <section>
-              <h3 className="text-xl font-semibold mb-2">Past Activities</h3>
+              <h3 className="text-xl font-semibold mb-2">Past Activities: What You REALLY Do in This Course</h3>
 
               {courseDetails === null && (
                 <p className="text-gray-400 italic">Loading activities…</p>
@@ -532,19 +600,56 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
                 </div>
               )}
 
-              {courseDetails === "none" && (
-                <p className="text-gray-400 italic">
-                  No information available for this course at your school or others. Please ask a teacher to submit an entry.
-                </p>
-              )}
-
               {courseDetails && courseDetails !== "none" && courseDetails !== "error" && (
                 <>
-                 {courseDetails.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase() && (
-                  <p className="text-red-200">
-                    No information on {selectedCourse} at {selectedSchool}, using other sources
-                  </p>
-                )}
+                 {(() => {
+                    const actualCodeUsed = courseDetails.sourceCode || courseDetails.alias || selectedCourse;
+
+if (
+  courseDetails.school &&
+  actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase() &&
+  courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()
+) {
+  return (
+    <p className="text-red-200">
+      No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed} at {courseDetails.school}.
+    </p>
+  );
+}
+
+if (
+  courseDetails.school.trim().toLowerCase() === selectedSchool.trim().toLowerCase() &&
+  actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase()
+) {
+  return (
+    <p className="text-red-200">
+      No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed}.
+    </p>
+  );
+}
+
+
+                    if (!courseDetails.school) {
+                      return (
+                        <p className="text-red-200">
+                          No school-specific information on {selectedCourse}.
+                        </p>
+                      );
+                    }
+
+                    if (courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) {
+                      return (
+                        <p className="text-red-200">
+                          No information on {selectedCourse} at {selectedSchool}, using other sources
+                        </p>
+                      );
+                    }
+
+                    return null;
+                  })()}
+
+                  {courseDetails.school && (
+                    <>
                   <p className="text-sm text-gray-300 italic mb-2">
                     Based on data from {courseDetails.school}, {courseDetails.year}
                   </p>
@@ -562,39 +667,42 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
                     These activities may vary by teacher and year.
                   </p>
                 </>
+                
+                    )}
+                    </>
               )}
             </section>
             <section>
-              <h3 className="text-xl font-semibold mb-2">Similar Courses</h3>
+              
 
               {courseDetails === null && (
                 <p className="text-gray-400 italic">Loading information…</p>
               )}
 
-              {courseDetails === "none" && (
-                <p className="text-gray-400 italic">
-                  No similar courses have been noted.
-                </p>
-              )}
 
               {courseDetails && courseDetails !== "none" && courseDetails !== "error" && (
                 <>
+                  {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 && (
+                    <>
+                    <h3 className="text-xl font-semibold mb-2">Similar Courses</h3>
                     <ul className="list-disc list-inside space-y-3 text-white text-center">
                       {courseDetails.similars.map((act, idx) => (
-                        <li key={idx}>
-                          {act.title}
-                        </li>
+                        <li key={idx}>{act.title}</li>
                       ))}
                     </ul>
-                  
-                  <p className="text-xl text-white mt-1 ">
-                    <strong>Key differences:</strong>
-                  </p>
-                  <p className="text-gray-200">
-                    {courseDetails.differences}
-                  </p>
+                    </>
+                  )}
+
+                  {courseDetails.differences?.trim() && (
+                    <>
+                      <p className="text-gray-200">
+                        {courseDetails.differences}
+                      </p>
+                    </>
+                  )}
                 </>
               )}
+
             </section>
 
             <section>
