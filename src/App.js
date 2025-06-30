@@ -1,6 +1,7 @@
 import './App.css';
 import { useState, useEffect } from 'react';
 import { Analytics } from "@vercel/analytics/react"
+import { track } from "@vercel/analytics";
 function App() {
   const [schoolCourses, setSchoolCourses] = useState({});
 const [loading, setLoading] = useState(true);
@@ -50,6 +51,7 @@ useEffect(() => {
 
   
   const handleCourseClick = (course, name) => {
+     track('course_click', { course, name });
     setSelectedCourse(course);
     setCourseDetails(null); // clear previous data
   
