@@ -1,6 +1,6 @@
 import './App.css';
 import { useState, useEffect } from 'react';
-
+import { Analytics } from "@vercel/analytics/react"
 function App() {
   const [schoolCourses, setSchoolCourses] = useState({});
 const [loading, setLoading] = useState(true);
@@ -108,7 +108,6 @@ useEffect(() => {
     "Canadian and World Studies",
     "Computer Studies",
     "Co-op",
-    "CPP",
     "English",
     "Français",
     "Guidance and Career Education",
@@ -232,7 +231,7 @@ useEffect(() => {
         <p className="text-2xl font-semibold">Or Filter By:</p>
 <div className="flex flex-col md:flex-row gap-4 justify-center items-start">
   {/* LEFT COLUMN */}
-  <div className="flex flex-col gap-6 justify-center items-center">
+  <div className="flex flex-col gap-6 mt-6 justify-center items-center">
     {/* School Selector */}
     <select
       className={`px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-black text-base ${
@@ -290,28 +289,28 @@ useEffect(() => {
   </div>
 
   {/* MIDDLE COLUMN (Subjects) */}
-    <div className="mt-4 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4 max-w-md md:w-[20rem] bg-white text-sm text-black space-y-2">
-            <div className="grid grid-cols-1 gap-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedSubjects.length === disciplines.length}
-                  onChange={() => {
-                    const allSelected = selectedSubjects.length === disciplines.length;
-                    setSelectedSubjects(allSelected ? [] : disciplines);
-                  }}
-                />
-                <span className="font-medium">Select All Subjects</span>
-              </label>
+    <div className="mt-0 max-h-56 overflow-y-auto border border-gray-300 rounded-lg p-4 max-w-md md:w-[20rem] bg-white text-sm text-black space-y-2">
+            
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedSubjects.length === disciplines.length}
+                    onChange={() => {
+                      const allSelected = selectedSubjects.length === disciplines.length;
+                      setSelectedSubjects(allSelected ? [] : disciplines);
+                    }}
+                  />
+                  <span className="font-medium">Select All Subjects</span>
+                </label>
 
-              <button
-                className="text-red-500 text-xs underline ml-1 w-fit"
-                onClick={() => setSelectedSubjects([])}
-              >
-                Clear All
-              </button>
-            </div>
-
+                <button
+                  className="text-red-500 text-xs underline ml-1 w-fit"
+                  onClick={() => setSelectedSubjects([])}
+                >
+                  Clear All
+                </button>
+              </div>
             <div className="grid grid-cols-1 gap-2">
               {disciplines.map((subject) => (
                 <label key={subject} className="flex items-center gap-2">
@@ -333,7 +332,7 @@ useEffect(() => {
           </div>
     
   {/* RIGHT COLUMN (Filters) */}
-  <div className="flex flex-col gap-6 justify-center items-center">
+  <div className="flex flex-col gap-6 mt-6 justify-center items-center">
     {/* SHSM selector commented out */}
     {/*
     <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-black text-base">
@@ -394,13 +393,13 @@ useEffect(() => {
           <div className="flex flex-col items-center mx-auto">
   <ul className="space-y-2 w-full max-w-xl">
     {courses.map(({ code, name }) => (
-      <li key={code} className="w-full flex justify-center items-center space-x-4"> {/* ✅ Make a row */}
+      <li key={code} className="w-full flex justify-center items-center space-x-4 text-md"> {/* ✅ Make a row */}
         
         {/* Centered Course Code Button */}
         <div className="flex justify-center w-24"> {/* ✅ Center the button */}
           <button
             onClick={() => handleCourseClick(code, name)}
-            className="text-blue-700 hover:underline text-center"
+            className="text-blue-700 hover:underline text-center "
           >
             {code}
           </button>
@@ -409,7 +408,7 @@ useEffect(() => {
         {/* Course Name Button */}
         <button
           onClick={() => handleCourseClick(code, name)}
-          className="flex-1 text-left text-blue-700 hover:underline truncate max-w-[16rem]"
+          className="flex-1 text-left text-blue-700 hover:underline truncate max-w-[18rem]"
           title={name}
         >
           {name}
@@ -433,6 +432,10 @@ useEffect(() => {
 
       {/* Sidebar */}
       {showSuggestions && (
+        <><div
+      className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 z-40"
+      onClick={() => setShowDisclaimer(false)} // Optional: click to close
+    ></div>
         <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
           <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
             <div className="flex justify-between items-center">
@@ -473,32 +476,39 @@ useEffect(() => {
               Diary of a ghost
             </button>*/}
           </div>
-        </div>
+        </div></>
       )}
       {showDisclaimer && (
-        <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
-          <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Disclaimer</h2>
-              <button
-                onClick={() => setShowDisclaimer(false)}
-                className="text-red-500 hover:underline text-lg"
-              >
-                Close ✕
-              </button>
-            </div>
+  <>
+    {/* Background Overlay */}
+    <div
+      className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 z-40"
+      onClick={() => setShowDisclaimer(false)} // Optional: click to close
+    ></div>
 
-            <hr className="border-gray-400" />
-            <div className="flex gap-2 text-gray-300 justify-center">
-                  <span>This website is created and maintained by a student as an independent project. It is not an official resource of the Halton District School Board (HDSB), and the information provided here may not always be up to date or accurate. While every effort is made to ensure the reliability of the content, users should verify any details with official sources before making decisions based on this website. The site and its creator assume no responsibility for errors, omissions, or any actions taken based on the information provided.
-For official HDSB curriculum and policies, please visit HDSB's official website.
-</span>
-                 
-                </div>
-            
-          </div>
+    {/* Sidebar */}
+    <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
+      <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Disclaimer</h2>
+          <button
+            onClick={() => setShowDisclaimer(false)}
+            className="text-red-500 hover:underline text-lg"
+          >
+            Close ✕
+          </button>
         </div>
-      )}
+        <hr className="border-gray-400" />
+        <div className="flex gap-2 text-gray-300 text-left">
+          <span>
+            This website is created and maintained by a student as an independent project. It is not an official resource of the Halton District School Board (HDSB), and the information provided here may not always be up to date or accurate. While every effort is made to ensure the reliability of the content, users should verify any details with official sources before making decisions based on this website. The site and its creator assume no responsibility for errors, omissions, or any actions taken based on the information provided.
+For official HDSB curriculum and policies, please visit HDSB's official website.
+          </span>
+        </div>
+      </div>
+    </div>
+  </>
+)}
       {selectedCourse && (
         <div className="fixed top-0 right-0 h-full w-full md:w-full bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
           <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
@@ -546,17 +556,17 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
         <>{courseDetails.curriculumSource &&
  courseDetails.curriculumSource.toUpperCase() !== selectedCourse.toUpperCase() &&
  !selectedCourse.toUpperCase().startsWith(courseDetails.curriculumSource.toUpperCase()) && (
-  <p className="text-yellow-300 italic text-sm mb-2">
+  <p className="text-yellow-300 italic text-sm mb-2 justify-center">
     No curriculum found for {selectedCourse}. Showing curriculum from {courseDetails.curriculumSource}.
   </p>
 )}
 
-
-      <ul className="list-none list-inside space-y-2 text-gray-100 text-left">
+<div className="max-w-[67%] mx-auto">
+      <ul className="list-none list-inside space-y-2 text-gray-100 text-left justify-center">
         {courseDetails.curriculum.map((item, idx) => (
           <li key={idx}>{item}</li>
         ))}
-        <div className="flex gap-2 text-white justify-center">
+        <div className="flex gap-2 text-white text-left">
           <span>Need more information?</span>
           <a 
             href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
@@ -567,7 +577,7 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
             Check the course curriculum
           </a>
         </div>
-      </ul></>
+      </ul></div></>
     ) : (
       <p className="text-gray-300 italic">No curriculum topics found.</p>
     )}
@@ -653,15 +663,16 @@ if (
                   <p className="text-sm text-gray-300 italic mb-2">
                     Based on data from {courseDetails.school}, {courseDetails.year}
                   </p>
-                  
-                    <ul className="list-disc list-inside space-y-8 text-white text-left">
+                  <div className="max-w-[67%] mx-auto">
+
+                    <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
                       {courseDetails.activities.map((act, idx) => (
                         <li key={idx}>
                           <strong>{act.title}</strong>{act.description ? ` – ${act.description}` : ''}
                         </li>
                       ))}
                     </ul>
-                  
+                  </div>
                   
                   <p className="text-sm italic text-gray-400 mt-1">
                     These activities may vary by teacher and year.
@@ -685,20 +696,22 @@ if (
                   {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 && (
                     <>
                     <h3 className="text-xl font-semibold mb-2">Similar Courses</h3>
-                    <ul className="list-disc list-inside space-y-3 text-white text-center">
+                    <ul className="flex flex-wrap gap-4 text-white text-center justify-center">
                       {courseDetails.similars.map((act, idx) => (
-                        <li key={idx}>{act.title}</li>
+                        <li key={idx} className="list-none">
+                          {act.title}
+                        </li>
                       ))}
                     </ul>
                     </>
                   )}
 
                   {courseDetails.differences?.trim() && (
-                    <>
+                    <div className="max-w-[67%] mx-auto">
                       <p className="text-gray-200">
                         {courseDetails.differences}
                       </p>
-                    </>
+                    </div>
                   )}
                 </>
               )}
@@ -729,6 +742,7 @@ if (
           </div>
         </div>
       )}
+<Analytics />
 
     </div>
   );
