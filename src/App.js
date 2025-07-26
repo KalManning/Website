@@ -21,7 +21,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbzXHucX4226sqKIVA97yrZy1ZPubT8LJsR7gBn0xIXfTTMfAjLfav8VYzMF5it90maj/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbx0PzMycYr175yKJmVFiISjAMj0NQ1I61QqPPBqncBscAn3TC6sIptDkqCYcLTxeiG3Dw/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -44,9 +44,13 @@ useEffect(() => {
   const [searchTerm, setSearchTerm] = useState('');
   const [postSecondaryRequirement, setPostSecondaryRequirement] = useState('');
   const [frenchImmersion, setFrenchImmersion] = useState(false);
+  const [video, setVideo] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showCurriculum, setShowCurriculum] = useState(false);
+  const [showPastActivities, setShowPastActivities] = useState(false);
+  const [showSimilars, setShowSimilars] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
 
   
@@ -58,7 +62,7 @@ useEffect(() => {
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbzXHucX4226sqKIVA97yrZy1ZPubT8LJsR7gBn0xIXfTTMfAjLfav8VYzMF5it90maj/exec?course=${course}&school=${selectedSchool}`
+      `https://script.google.com/macros/s/AKfycbx0PzMycYr175yKJmVFiISjAMj0NQ1I61QqPPBqncBscAn3TC6sIptDkqCYcLTxeiG3Dw/exec?course=${course}&school=${selectedSchool}`
     )
       .then((res) => res.json())
       .then((result) => {
@@ -103,6 +107,22 @@ useEffect(() => {
         setCourseDetails("error");
       });
   };
+const getDynamicMaxChWidth = (items = []) => {
+  const maxLen = items.reduce((max, val) => {
+    const len = val?.length || 0;
+    return Math.max(max, len);
+  }, 0);
+  const buffer = Math.ceil(maxLen * 1.1);
+  return `${Math.min(Math.max(buffer, 50), 100)}ch`;
+};
+const getDynamicMaxChWidthFromActivities = (activities = []) => {
+  const maxLen = activities.reduce((max, act) => {
+    const full = `${act.title || ''} – ${act.description || ''}`;
+    return Math.max(max, full.length);
+  }, 0);
+  const buffer = Math.ceil(maxLen * 1.1);
+  return `${Math.min(Math.max(buffer, 50), 100)}ch`;
+};
 
   const disciplines = [
     "Art",
@@ -125,7 +145,7 @@ useEffect(() => {
 
   const allCourses = selectedSchool ? schoolCourses[selectedSchool] || [] : [];
 
-  const courses = allCourses.filter(({ code }) => {
+  const courses = allCourses.filter(({ code, hasVideo }) => {
     if (!code) return false;
     
     const grade = code[3];
@@ -157,8 +177,8 @@ useEffect(() => {
         grade === "4")||
         (postSecondaryRequirement === '2 of 3: Chemistry, Physics, Biology' &&
         (code.startsWith('SBI4U') || code.startsWith('SCH4U') ||code.startsWith('SPH4U')));
-  
-    return matchesGrade && matchesPathway && matchesSubject && matchesSearch && matchesPostSecondaryReq && (!frenchImmersion || code.endsWith("4"));
+    const matchesVideo = !video || hasVideo;
+    return matchesVideo && matchesGrade && matchesPathway && matchesSubject && matchesSearch && matchesPostSecondaryReq && (!frenchImmersion || code.endsWith("4"));
   });
   
   useEffect(() => {
@@ -357,17 +377,28 @@ useEffect(() => {
       </option>
     </select>
     {/* French Immersion + Clear Filters */}
-    <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
-      <label className="flex items-center gap-2 text-black text-sm">
-        <input
-          type="checkbox"
-          checked={frenchImmersion}
-          onChange={() => setFrenchImmersion((prev) => !prev)}
-        />
-        <span>French Immersion Credit</span>
-      </label>
+    <div className="flex gap-4">
+      <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
+        <label className="flex items-center gap-2 text-black text-sm">
+          <input
+            type="checkbox"
+            checked={frenchImmersion}
+            onChange={() => setFrenchImmersion((prev) => !prev)}
+          />
+          <span>French Immersion Credit</span>
+        </label>
+      </div>
+      <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
+        <label className="flex items-center gap-2 text-black text-sm">
+          <input
+            type="checkbox"
+            checked={video}
+            onChange={() => setVideo((prev) => !prev)}
+          />
+          <span>Promo-Video Available</span>
+        </label>
+      </div>
     </div>
-
     <button
       onClick={() => window.location.reload()}
       className="px-2 py-1 bg-red-200 text-black text-sm rounded-md hover:bg-red-100"
@@ -381,7 +412,11 @@ useEffect(() => {
         
         <div className="flex-grow w-full h-full overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-200 text-sm text-black">
   <h2 className="text-2xl font-semibold mb-4 text-center">Courses</h2>
-
+{selectedSchool && courses.length > 0 && (
+  <p className="text-center text-gray-600 mb-2 italic">
+    Displaying {courses.length} course{courses.length !== 1 ? 's' : ''}
+  </p>
+)}
   {loading ? (
     <p className="text-center text-gray-500 mt-4">Loading courses...</p>
   ) : (
@@ -394,7 +429,10 @@ useEffect(() => {
         ) : courses.length > 0 ? (
           <div className="flex flex-col items-center mx-auto">
   <ul className="space-y-2 w-full max-w-xl">
-    {courses.map(({ code, name }) => (
+    {courses.map(({ code, name, hasVideo }) => {
+      const icon = hasVideo ? '📸 ' : '';
+      const displayCode = `${icon}${code}`;
+      return(
       <li key={code} className="w-full flex justify-center items-center space-x-4 text-md"> {/* ✅ Make a row */}
         
         {/* Centered Course Code Button */}
@@ -403,7 +441,7 @@ useEffect(() => {
             onClick={() => handleCourseClick(code, name)}
             className="text-blue-700 hover:underline text-center "
           >
-            {code}
+            {displayCode}
           </button>
         </div>
 
@@ -416,8 +454,8 @@ useEffect(() => {
           {name}
         </button>
 
-      </li>
-    ))}
+      </li>);}
+    )}
   </ul>
 </div>
         ) : (
@@ -436,7 +474,7 @@ useEffect(() => {
       {showSuggestions && (
         <><div
       className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 z-40"
-      onClick={() => setShowDisclaimer(false)} // Optional: click to close
+      onClick={() => setShowSuggestions(false)} // Optional: click to close
     ></div>
         <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
           <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
@@ -540,57 +578,72 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
             <hr className="border-gray-600" />
             {/* What You Will See */}
             <section>
+  <div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
   <h3
-  className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
-  onClick={() => setShowCurriculum((prev) => !prev)}
->
-  {showCurriculum ? 'Hide' : 'Show'} Curriculum Breakdown {showCurriculum ? '▼' : '▶'}
-</h3>
+    className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+    onClick={() => setShowCurriculum((prev) => !prev)}
+  >
+    {showCurriculum ? '▼' : '▶'} Curriculum Breakdown
+  </h3>
 
-{showCurriculum && (
-  <>
-  
-    {courseDetails === null ? (
-      <p className="text-gray-400 italic">Loading curriculum…</p>
-    ) : typeof courseDetails === "object" &&
-      Array.isArray(courseDetails.curriculum) &&
-      courseDetails.curriculum.length > 0 ? (
-        <>{courseDetails.curriculumSource &&
- courseDetails.curriculumSource.toUpperCase() !== selectedCourse.toUpperCase() &&
- !selectedCourse.toUpperCase().startsWith(courseDetails.curriculumSource.toUpperCase()) && (
-  <p className="text-yellow-300 italic text-sm mb-2 justify-center">
-    No curriculum found for {selectedCourse}. Showing curriculum from {courseDetails.curriculumSource}.
-  </p>
-)}
-
-<div className="max-w-[67%] mx-auto">
-      <ul className="list-none list-inside space-y-2 text-gray-100 text-left justify-center">
-        {courseDetails.curriculum.map((item, idx) => (
-          <li key={idx}>{item}</li>
-        ))}
-        <div className="flex gap-2 text-white text-left">
-          <span>Need more information?</span>
-          <a 
-            href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline text-blue-300"
+  {showCurriculum && (
+    <div>
+      {courseDetails === null ? (
+        <p className="text-gray-400 italic">Loading curriculum…</p>
+      ) : typeof courseDetails === "object" &&
+        Array.isArray(courseDetails.curriculum) &&
+        courseDetails.curriculum.length > 0 ? (
+        <>
+          {courseDetails.curriculumSource &&
+            courseDetails.curriculumSource.toUpperCase() !== selectedCourse.toUpperCase() &&
+            !selectedCourse.toUpperCase().startsWith(courseDetails.curriculumSource.toUpperCase()) && (
+              <p className="text-yellow-300 italic text-sm text-center mb-2 justify-center">
+                No curriculum found for {selectedCourse}. Showing curriculum from {courseDetails.curriculumSource}.
+              </p>
+          )}
+          
+          <div
+            className="w-full mx-auto text-left"
+            style={{ maxWidth: getDynamicMaxChWidth(courseDetails.curriculum) }}
           >
-            Check the course curriculum
-          </a>
-        </div>
-      </ul></div></>
-    ) : (
-      <p className="text-gray-300 italic">No curriculum topics found.</p>
-    )}
-  </>
-)}
+            <ul className="list-disc list-inside space-y-2 text-gray-100 text-left">
+            {courseDetails.curriculum.map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+            </ul>
+          </div>
+          <div className="mt-2 text-sm text-center">
+            <span>Need more information? </span>
+            <a
+              href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline text-blue-300"
+            >
+              Check the course curriculum
+            </a>
+          </div>
+        </>
+      ) : (
+        <p className="text-gray-300 italic">No curriculum topics found.</p>
+      )}
+    </div>
+  )}
+</div>
 
 </section>
 
+<div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
+  <h3
+    className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+    onClick={() => setShowPastActivities((prev) => !prev)}
+  >
+    {showPastActivities ? '▼' : '▶'} Past Activities: What You REALLY Do In This Course
+  </h3>
 
+  {showPastActivities && (
+    <>
             <section>
-              <h3 className="text-xl font-semibold mb-2">Past Activities: What You REALLY Do in This Course</h3>
 
               {courseDetails === null && (
                 <p className="text-gray-400 italic">Loading activities…</p>
@@ -665,7 +718,10 @@ if (
                   <p className="text-sm text-gray-300 italic mb-2">
                     Based on data from {courseDetails.school}, {courseDetails.year}
                   </p>
-                  <div className="max-w-[67%] mx-auto">
+                  <div
+                    className="w-full mx-auto text-left"
+                    style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities) }}
+                  >
 
                     <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
                       {courseDetails.activities.map((act, idx) => (
@@ -685,6 +741,19 @@ if (
                     </>
               )}
             </section>
+            </>
+  )}
+</div>
+<div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
+  <h3
+    className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+    onClick={() => setShowSimilars((prev) => !prev)}
+  >
+    {showSimilars ? '▼' : '▶'} Similar Courses
+  </h3>
+
+  {showSimilars && (
+    <>
             <section>
               
 
@@ -697,7 +766,6 @@ if (
                 <>
                   {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 && (
                     <>
-                    <h3 className="text-xl font-semibold mb-2">Similar Courses</h3>
                     <ul className="flex flex-wrap gap-4 text-white text-center justify-center">
                       {courseDetails.similars.map((act, idx) => (
                         <li key={idx} className="list-none">
@@ -709,7 +777,7 @@ if (
                   )}
 
                   {courseDetails.differences?.trim() && (
-                    <div className="max-w-[67%] mx-auto">
+                    <div className="max-w-[100ch] w-full mx-auto text-center">
                       <p className="text-gray-200">
                         {courseDetails.differences}
                       </p>
@@ -719,26 +787,35 @@ if (
               )}
 
             </section>
+</>
+  )}
+</div>
+            <div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
+              <h3
+                className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+                onClick={() => setShowNotes((prev) => !prev)}
+              >
+                {showNotes ? '▼' : '▶'} Additional Notes
+              </h3>
 
-            <section>
-              <h3 className="text-xl font-semibold mb-2">Additional Notes</h3>
-
-              {courseDetails && courseDetails.notes ? (
+              {showNotes && (
                 <>
-                  <p className="text-sm text-gray-300 italic mb-2">
-                    Based on data from {courseDetails.school}, {courseDetails.year}
-                  </p>
-                  <p className="text-gray-100">
-                    {courseDetails.notes}
-                  </p>
+                  {courseDetails && courseDetails.notes ? (
+                    <>
+                      <p className="text-sm text-gray-300 italic mb-2">
+                        Based on data from {courseDetails.school}, {courseDetails.year}
+                      </p>
+                      <div className="max-w-[100ch] w-full mx-auto text-center">
+                        <p className="text-gray-100">{courseDetails.notes}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-gray-400 italic">No notes submitted for this course.</p>
+                  )}
                 </>
-                
-              ) : (
-                <p className="text-gray-400 italic">
-                  No notes submitted for this course.
-                </p>
               )}
-            </section>
+            </div>
+
 
 
           </div>
