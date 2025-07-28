@@ -21,7 +21,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbx0PzMycYr175yKJmVFiISjAMj0NQ1I61QqPPBqncBscAn3TC6sIptDkqCYcLTxeiG3Dw/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbz_odVEV2WqzdTYH_48nRTXevqjNft1azb_ZARqsDEpi-n9t6jpq76oLDLBQo1J6Ua_/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -54,7 +54,7 @@ useEffect(() => {
 
 
   
-  const handleCourseClick = (course, name) => {
+  const handleCourseClick = (course, name, hasVideo) => {
      track('course_click', { course, name });
     setSelectedCourse(course);
     setCourseDetails(null); // clear previous data
@@ -62,7 +62,7 @@ useEffect(() => {
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbx0PzMycYr175yKJmVFiISjAMj0NQ1I61QqPPBqncBscAn3TC6sIptDkqCYcLTxeiG3Dw/exec?course=${course}&school=${selectedSchool}`
+      `https://script.google.com/macros/s/AKfycbz_odVEV2WqzdTYH_48nRTXevqjNft1azb_ZARqsDEpi-n9t6jpq76oLDLBQo1J6Ua_/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
     )
       .then((res) => res.json())
       .then((result) => {
@@ -82,7 +82,10 @@ useEffect(() => {
   alias: result.alt?.alias || null,
   sourceSchool: result.alt?.sourceSchool || null,
   sourceCode: result.alt?.sourceCode || null,
-  curriculumSource: result.alt?.curriculumSource || null
+  curriculumSource: result.alt?.curriculumSource || null,
+  hasVideo: hasVideo,
+
+  videos: result.alt?.videos
 });
   } else {
   setCourseDetails({
@@ -95,6 +98,8 @@ useEffect(() => {
     notes: "",
     school: "",
     year: "",
+    hasVideo: hasVideo,
+    videos: result.alt?.videos
   });
 }
 
@@ -429,7 +434,7 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
         ) : courses.length > 0 ? (
           <div className="flex flex-col items-center mx-auto">
   <ul className="space-y-2 w-full max-w-xl">
-    {courses.map(({ code, name, hasVideo }) => {
+    {courses.map(({ code, name, hasVideo, videos }) => {
       const icon = hasVideo ? '📸 ' : '';
       const displayCode = `${icon}${code}`;
       return(
@@ -438,7 +443,7 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
         {/* Centered Course Code Button */}
         <div className="flex justify-center w-24"> {/* ✅ Center the button */}
           <button
-            onClick={() => handleCourseClick(code, name)}
+            onClick={() => handleCourseClick(code, name, hasVideo)}
             className="text-blue-700 hover:underline text-center "
           >
             {displayCode}
@@ -447,7 +452,7 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
 
         {/* Course Name Button */}
         <button
-          onClick={() => handleCourseClick(code, name)}
+          onClick={() => handleCourseClick(code, name, hasVideo)}
           className="flex-1 text-left text-blue-700 hover:underline truncate max-w-[18rem]"
           title={name}
         >
@@ -815,7 +820,26 @@ if (
                 </>
               )}
             </div>
-
+              {courseDetails&&courseDetails.hasVideo&& (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-2">Video</h3>
+                  <ul className="list-disc list-inside space-y-1 text-blue-200">
+                    {courseDetails.videos.map((vid) => (
+                      <li key={vid.url}>
+                        <a
+                          href={vid.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                        >
+                          {vid.name}
+                        </a>{" "}
+                        <span className="text-gray-500 text-sm">({vid.date})</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
 
           </div>
