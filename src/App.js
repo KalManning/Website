@@ -21,7 +21,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbz_odVEV2WqzdTYH_48nRTXevqjNft1azb_ZARqsDEpi-n9t6jpq76oLDLBQo1J6Ua_/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxDCFWzd0VB9pgofNscwfNUcdPvUfWoy4aahhZjU_uSnhpktcsSe5ClOXJGtlli93PBdg/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -36,8 +36,10 @@ useEffect(() => {
   fetchCourses();
 }, []);
 
-
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDiary, setShowDiary] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [hasVideo, setHasVideo] = useState(false);
   const [touchedCourseList, setTouchedCourseList] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedPathway, setSelectedPathway] = useState('');
@@ -57,12 +59,13 @@ useEffect(() => {
   const handleCourseClick = (course, name, hasVideo) => {
      track('course_click', { course, name });
     setSelectedCourse(course);
+    setHasVideo(hasVideo);
     setCourseDetails(null); // clear previous data
   
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbz_odVEV2WqzdTYH_48nRTXevqjNft1azb_ZARqsDEpi-n9t6jpq76oLDLBQo1J6Ua_/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
+      `https://script.google.com/macros/s/AKfycbxDCFWzd0VB9pgofNscwfNUcdPvUfWoy4aahhZjU_uSnhpktcsSe5ClOXJGtlli93PBdg/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
     )
       .then((res) => res.json())
       .then((result) => {
@@ -223,29 +226,40 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
           />
           myBlueprint
         </a>
-        <button
-          onClick={() => setShowDisclaimer(true)}
-          className="flex items-center gap-2 hover:underline text-blue-700">
-            Disclaimer
-        </button>
         <a
-          href="https://docs.google.com/forms/d/e/1FAIpQLSfCo2vjguN7kOOcSBzT8sBkt4CNI5-4-UHlnZM9WVc_SJU-ww/viewform?usp=header"
+          href="https://www.hdsb.ca/schools/Pages/Find%20My%20Local%20School/School-Listing.aspx"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 hover:underline text-blue-700"
         >
-          Give Website Feedback
+          <img
+            src="/hdsb.png"
+            alt="School Websites"
+            className="h-6 w-auto"
+          />
+          School Websites
         </a>
+        <a
+              href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline text-blue-700"
+            >
+              Ontario Curriculum
+            </a>
       </div>
       <header className="App-header flex flex-col flex-grow items-center space-y-6 p-6">
         <div className="absolute top-12 right-4">
           <button
-            onClick={() => setShowSuggestions(true)}
-            className="bg-gray-100 hover:bg-blue-400 text-black px-4 py-2 rounded-lg shadow text-sm"
+            onClick={() => setShowMenu(true)}
+            className="text-black bg-gray-100 text-3xl w-12 h-12 rounded hover:bg-gray-200"
+            title="Open Menu"
           >
-            Navigation Suggestions
+            ☰
           </button>
+
         </div>
+
         <h1 className="text-4xl font-bold">HDSB Courses Additional Information</h1>
 
         <input
@@ -418,9 +432,11 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
         <div className="flex-grow w-full h-full overflow-y-auto border border-gray-300 rounded-lg p-4 bg-gray-200 text-sm text-black">
   <h2 className="text-2xl font-semibold mb-4 text-center">Courses</h2>
 {selectedSchool && courses.length > 0 && (
-  <p className="text-center text-gray-600 mb-2 italic">
+  <><p className="text-center text-gray-600 mb-2 italic">
     Displaying {courses.length} course{courses.length !== 1 ? 's' : ''}
   </p>
+  <hr className="border-t border-gray-400 w-full max-w-xl mx-auto mb-4" /></>
+  
 )}
   {loading ? (
     <p className="text-center text-gray-500 mt-4">Loading courses...</p>
@@ -517,9 +533,6 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
               <li>Ask teachers what their courses are like.</li>
               <li>Ask upper-grade peers what they thought of their classes.</li>
             </ul>
-            {/*<button className='absolute bottom-4 right-4 hover:underline'>
-              Diary of a ghost
-            </button>*/}
           </div>
         </div></>
       )}
@@ -554,6 +567,110 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     </div>
   </>
 )}
+{showMenu && (
+  <>
+    <div
+      className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 z-40"
+      onClick={() => setShowMenu(false)}
+    ></div>
+
+    <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50">
+      <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Menu</h2>
+          <button
+            onClick={() => setShowMenu(false)}
+            className="text-red-500 hover:underline text-lg"
+          >
+            Close ✕
+          </button>
+        </div>
+        <hr className="border-gray-400" />
+<button
+  onClick={() => {
+    setShowSuggestions(true);
+    setShowMenu(false);
+  }}
+  className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow w-full text-left"
+>
+  Navigation Suggestions
+</button>
+        {/* Disclaimer Button */}
+
+
+{/* Feedback Link */}
+<a
+  href="https://drive.google.com/drive/folders/17r-FDXNuOYvAXVPnAelEpbJQzHu0GiVB7JU8wMHec1j-awhhkLfn9-X7E_NZWFKeI7VSrWOY"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow w-full text-left"
+>
+  View All Promo Videos
+</a>
+<button
+  onClick={() => {
+    setShowDisclaimer(true);
+    setShowMenu(false);
+  }}
+  className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow w-full text-left"
+>
+  Disclaimer
+</button>
+
+<a
+  href="https://docs.google.com/forms/d/e/1FAIpQLSfCo2vjguN7kOOcSBzT8sBkt4CNI5-4-UHlnZM9WVc_SJU-ww/viewform?usp=header"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow w-full text-left"
+>
+  Give Website Feedback
+</a>
+{/* Diary of a Ghost */}
+<div className="fixed bottom-4 right-4">
+  <button
+    onClick={() => {
+      setShowDiary(true);
+      setShowMenu(false);
+    }}
+    className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow text-left"
+  >
+    Diary of a Ghost
+  </button>
+</div>
+
+      </div>
+    </div>
+  </>
+)}
+{showDiary && (
+  <>
+    <div
+      className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-60 z-40"
+      onClick={() => setShowDiary(false)}
+    ></div>
+
+    <div className="fixed top-0 right-0 h-full w-full md:w-1/2 bg-gray-900 text-white shadow-lg z-50">
+      <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Diary of a Ghost</h2>
+          <button
+            onClick={() => setShowDiary(false)}
+            className="text-red-500 hover:underline text-lg"
+          >
+            Close ✕
+          </button>
+        </div>
+        <hr className="border-gray-400" />
+        <div className="flex gap-2 text-gray-300 text-left">
+          <span>
+            This is placeholder content copied from the disclaimer. Replace with Ghost diary content later.
+          </span>
+        </div>
+      </div>
+    </div>
+  </>
+)}
+
       {selectedCourse && (
         <div className="fixed top-0 right-0 h-full w-full md:w-full bg-gray-900 text-white shadow-lg z-50 transition-transform duration-300 transform translate-x-0">
           <div className="p-6 flex flex-col h-full overflow-y-auto space-y-6">
@@ -820,11 +937,15 @@ if (
                 </>
               )}
             </div>
-              {courseDetails&&courseDetails.hasVideo&& (
+              {hasVideo&& (
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold mb-2">Video</h3>
                   <ul className="list-disc list-inside space-y-1 text-blue-200">
-                    {courseDetails.videos.map((vid) => (
+                    {courseDetails === null && (
+                      <p className="text-gray-400 italic">Loading video...</p>
+                    )}
+                    {courseDetails !== null && (
+                      <>{courseDetails.videos.map((vid) => (
                       <li key={vid.url}>
                         <a
                           href={vid.url}
@@ -836,7 +957,10 @@ if (
                         </a>{" "}
                         <span className="text-gray-500 text-sm">({vid.date})</span>
                       </li>
-                    ))}
+                    ))}</>
+                      
+                    )}
+                    
                   </ul>
                 </div>
               )}
