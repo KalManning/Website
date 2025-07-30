@@ -21,7 +21,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxDCFWzd0VB9pgofNscwfNUcdPvUfWoy4aahhZjU_uSnhpktcsSe5ClOXJGtlli93PBdg/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxvynn4u-mwPRSKI7cgCP-SqT_HsR7__f-AFKbjyeTpoFKqMP0ZG66NeHgG8TJJ2JEPPA/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -53,6 +53,7 @@ useEffect(() => {
   const [showPastActivities, setShowPastActivities] = useState(false);
   const [showSimilars, setShowSimilars] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showTests, setShowTests] = useState(false);
 
 
   
@@ -65,7 +66,7 @@ useEffect(() => {
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbxDCFWzd0VB9pgofNscwfNUcdPvUfWoy4aahhZjU_uSnhpktcsSe5ClOXJGtlli93PBdg/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
+      `https://script.google.com/macros/s/AKfycbxvynn4u-mwPRSKI7cgCP-SqT_HsR7__f-AFKbjyeTpoFKqMP0ZG66NeHgG8TJJ2JEPPA/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
     )
       .then((res) => res.json())
       .then((result) => {
@@ -632,7 +633,7 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
       setShowDiary(true);
       setShowMenu(false);
     }}
-    className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow text-left"
+    className="border-gray-600 bg-gray-700 text-xs hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow text-left"
   >
     Diary of a Ghost
   </button>
@@ -764,107 +765,151 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
   </h3>
 
   {showPastActivities && (
-    <>
-            <section>
+  <section>
+    {courseDetails === null ? (
+      <p className="text-gray-400 italic">Loading activities…</p>
+    ) : (
+      <>
+        {/* Warning if course info is from another school, old, or missing */}
+        {(courseDetails === "none" ||
+          (courseDetails &&
+            courseDetails !== "error" &&
+            courseDetails.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) ||
+          (courseDetails &&
+            courseDetails !== "error" &&
+            courseDetails.year < minValidYear)) && (
+          <div className="mt-4 p-4 border border-yellow-400 bg-yellow-50 rounded-xl">
+            <p className="text-md font-semibold text-yellow-700">
+              Have you taken this course? Is the following information outdated, incorrect, or missing?
+            </p>
+            <a
+              href="https://docs.google.com/forms/d/e/1FAIpQLSfTqM4Z-KCO-kVblD7HByEi4BQgQrUGiKjR4f-FJQ_unxQmig/viewform?usp=header"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600 transition"
+            >
+              Suggest an addition
+            </a>
+          </div>
+        )}
 
-              {courseDetails === null && (
-                <p className="text-gray-400 italic">Loading activities…</p>
-              )}
-              {(courseDetails === "none"||  
-                (courseDetails && courseDetails !== "none" && courseDetails !== "error" &&((courseDetails.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()))) || 
-                (courseDetails && courseDetails !== "none" && courseDetails !== "error" && (courseDetails.year < minValidYear))
-              ) && (
-                <div className="mt-4 p-4 border border-yellow-400 bg-yellow-50 rounded-xl">
-                  <p className="text-md font-semibold text-yellow-700">Have you taken this course? Is the following information outdated, incorrect, or missing?</p>
-                  <a
-                    href="https://docs.google.com/forms/d/e/1FAIpQLSfTqM4Z-KCO-kVblD7HByEi4BQgQrUGiKjR4f-FJQ_unxQmig/viewform?usp=header"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600 transition"
-                  >
-                    Suggest an addition
-                  </a>
+        {/* Contextual source info */}
+        {courseDetails !== "none" && courseDetails !== "error" && (
+          <>
+            {(() => {
+              const actualCodeUsed = courseDetails.sourceCode || courseDetails.alias || selectedCourse;
+
+              if (
+                courseDetails.school &&
+                actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase() &&
+                courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()
+              ) {
+                return (
+                  <p className="text-red-200">
+                    No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed} at {courseDetails.school}.
+                  </p>
+                );
+              }
+
+              if (
+                courseDetails.school?.trim().toLowerCase() === selectedSchool.trim().toLowerCase() &&
+                actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase()
+              ) {
+                return (
+                  <p className="text-red-200">
+                    No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed}.
+                  </p>
+                );
+              }
+
+              if (!courseDetails.school) {
+                return (
+                  <p className="text-red-200">
+                    No school-specific information on {selectedCourse}.
+                  </p>
+                );
+              }
+
+              if (courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) {
+                return (
+                  <p className="text-red-200">
+                    No information on {selectedCourse} at {selectedSchool}, using other sources.
+                  </p>
+                );
+              }
+
+              return null;
+            })()}
+
+            {/* Show activities if available */}
+            {Array.isArray(courseDetails.activities) && courseDetails.activities.length > 0 ? (
+              <>
+                <p className="text-sm text-gray-300 italic mb-2">
+                  Based on data from {courseDetails.school}, {courseDetails.year}
+                </p>
+                <div
+                  className="w-full mx-auto text-left"
+                  style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities) }}
+                >
+                  <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
+                    {courseDetails.activities.map((act, idx) => (
+                      <li key={idx}>
+                        <strong>{act.title}</strong>
+                        {act.description ? ` – ${act.description}` : ''}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              )}
+                <p className="text-sm italic text-gray-400 mt-1">
+                  These activities may vary by teacher and year.
+                </p>
+              </>
+            ) : (
+              <p className="text-gray-400 italic">No activities submitted for this course.</p>
+            )}
+          </>
+        )}
+      </>
+    )}
+  </section>
+)}
 
-              {courseDetails && courseDetails !== "none" && courseDetails !== "error" && (
-                <>
-                 {(() => {
-                    const actualCodeUsed = courseDetails.sourceCode || courseDetails.alias || selectedCourse;
-
-if (
-  courseDetails.school &&
-  actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase() &&
-  courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()
-) {
-  return (
-    <p className="text-red-200">
-      No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed} at {courseDetails.school}.
-    </p>
-  );
-}
-
-if (
-  courseDetails.school.trim().toLowerCase() === selectedSchool.trim().toLowerCase() &&
-  actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase()
-) {
-  return (
-    <p className="text-red-200">
-      No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed}.
-    </p>
-  );
-}
-
-
-                    if (!courseDetails.school) {
-                      return (
-                        <p className="text-red-200">
-                          No school-specific information on {selectedCourse}.
-                        </p>
-                      );
-                    }
-
-                    if (courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) {
-                      return (
-                        <p className="text-red-200">
-                          No information on {selectedCourse} at {selectedSchool}, using other sources
-                        </p>
-                      );
-                    }
-
-                    return null;
-                  })()}
-
-                  {courseDetails.school && (
-                    <>
-                  <p className="text-sm text-gray-300 italic mb-2">
-                    Based on data from {courseDetails.school}, {courseDetails.year}
-                  </p>
-                  <div
-                    className="w-full mx-auto text-left"
-                    style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities) }}
-                  >
-
-                    <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
-                      {courseDetails.activities.map((act, idx) => (
-                        <li key={idx}>
-                          <strong>{act.title}</strong>{act.description ? ` – ${act.description}` : ''}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <p className="text-sm italic text-gray-400 mt-1">
-                    These activities may vary by teacher and year.
-                  </p>
-                </>
-                
-                    )}
-                    </>
-              )}
-            </section>
-            </>
-  )}
+</div>
+<div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
+  <h3
+    className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+    onClick={() => setShowTests((prev) => !prev)}
+  >
+    {showTests ? '▼' : '▶'} Test Question Examples
+  </h3>
+  {showTests && (
+  <>
+    {courseDetails === null ? (
+      <p className="text-gray-400 italic">Loading information…</p>
+    ) : courseDetails !== "error" && courseDetails.questions && courseDetails.questions.length > 0 ? (
+      <>
+        <p className="text-sm text-gray-300 italic mb-2">
+          Based on data from {courseDetails.school}, {courseDetails.year}
+        </p>
+        <div
+          className="w-full mx-auto text-left"
+          style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.questions) }}
+        >
+          <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
+            {courseDetails.questions.map((act, idx) => (
+              <li key={idx}>{act.title}</li>
+            ))}
+          </ul>
+        </div>
+        <p className="text-sm italic text-gray-400 mt-1">
+          These activities may vary by teacher and year.
+        </p>
+      </>
+    ) : (
+      <p className="text-gray-400 italic">No test question examples submitted for this course.</p>
+    )}
+  </>
+)}
 </div>
 <div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
   <h3
@@ -875,71 +920,65 @@ if (
   </h3>
 
   {showSimilars && (
-    <>
-            <section>
-              
+  <section>
+    {courseDetails === null ? (
+      <p className="text-gray-400 italic">Loading information…</p>
+    ) : courseDetails !== "none" && courseDetails !== "error" ? (
+      <>
+        {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 ? (
+          <ul className="flex flex-wrap gap-4 text-white text-center justify-center">
+            {courseDetails.similars.map((act, idx) => (
+              <li key={idx} className="list-none">{act.title}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-400 italic">No similar courses submitted.</p>
+        )}
 
-              {courseDetails === null && (
-                <p className="text-gray-400 italic">Loading information…</p>
-              )}
+        {courseDetails.differences?.trim() && (
+          <div className="max-w-[100ch] w-full mx-auto text-center">
+            <p className="text-gray-200">{courseDetails.differences}</p>
+          </div>
+        )}
+      </>
+    ) : (
+      <p className="text-gray-400 italic">No similar courses submitted.</p>
+    )}
+  </section>
+)}
 
-
-              {courseDetails && courseDetails !== "none" && courseDetails !== "error" && (
-                <>
-                  {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 && (
-                    <>
-                    <ul className="flex flex-wrap gap-4 text-white text-center justify-center">
-                      {courseDetails.similars.map((act, idx) => (
-                        <li key={idx} className="list-none">
-                          {act.title}
-                        </li>
-                      ))}
-                    </ul>
-                    </>
-                  )}
-
-                  {courseDetails.differences?.trim() && (
-                    <div className="max-w-[100ch] w-full mx-auto text-center">
-                      <p className="text-gray-200">
-                        {courseDetails.differences}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-
-            </section>
-</>
-  )}
 </div>
             <div className="border border-gray-700 rounded-xl bg-gray-800 p-4">
-              <h3
-                className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
-                onClick={() => setShowNotes((prev) => !prev)}
-              >
-                {showNotes ? '▼' : '▶'} Additional Notes
-              </h3>
+  <h3
+    className="text-xl font-semibold mb-2 cursor-pointer text-blue-300 hover:underline"
+    onClick={() => setShowNotes((prev) => !prev)}
+  >
+    {showNotes ? '▼' : '▶'} Additional Notes
+  </h3>
 
-              {showNotes && (
-                <>
-                  {courseDetails && courseDetails.notes ? (
-                    <>
-                      <p className="text-sm text-gray-300 italic mb-2">
-                        Based on data from {courseDetails.school}, {courseDetails.year}
-                      </p>
-                      <div className="max-w-[100ch] w-full mx-auto text-center">
-                        <p className="text-gray-100">{courseDetails.notes}</p>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-gray-400 italic">No notes submitted for this course.</p>
-                  )}
-                </>
-              )}
-            </div>
+  {showNotes && (
+    <>
+      {courseDetails === null ? (
+        <p className="text-gray-400 italic">Loading information…</p>
+      ) : courseDetails.notes?.trim() ? (
+        <>
+          <p className="text-sm text-gray-300 italic mb-2">
+            Based on data from {courseDetails.school}, {courseDetails.year}
+          </p>
+          <div className="max-w-[100ch] w-full mx-auto text-center">
+            <p className="text-gray-100">{courseDetails.notes}</p>
+          </div>
+        </>
+      ) : (
+        <p className="text-gray-400 italic">No notes submitted for this course.</p>
+      )}
+    </>
+  )}
+</div>
+
               {hasVideo&& (
                 <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-2">Video</h3>
+                  <h3 className="text-2xl font-semibold mb-2">Watch Promo Video</h3>
                   <ul className="list-disc list-inside space-y-1 text-blue-200">
                     {courseDetails === null && (
                       <p className="text-gray-400 italic">Loading video...</p>
@@ -951,7 +990,7 @@ if (
                           href={vid.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:underline"
+                          className="hover:underline text-xl"
                         >
                           {vid.name}
                         </a>{" "}
