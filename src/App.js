@@ -664,7 +664,42 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
         <hr className="border-gray-400" />
         <div className="flex gap-2 text-gray-300 text-left">
           <span>
-            This is placeholder content copied from the disclaimer. Replace with Ghost diary content later.
+            During my years drifting through the halls of M.M. Robinson, I did more wondering,<br/>
+            more wandering, than anyone should ever have to. I moved like a ghost,<br/>
+            unseen in the systems that were meant to support me.<br/><br/>
+
+            Course selections season was a time of stress rather than discovery: how do I best fill<br/>
+            these compulsory group clusters? How do I fulfill McMaster Health Science's<br/>
+            "non-math, non-science, non-tech" requirement? Is intro to business worth my time?<br/>
+            Is Canadian law? Is kinesiology? The government-mandated course descriptions on<br/>
+            MyBlueprint don't exactly paint a good picture, either.<br/><br/>
+
+            I spent hours flip-flopping between choices, and course conflicts were highly concerning.<br/>
+            My one lifeboat was my brother. He'd taken these courses before, and he could tell me<br/>
+            <em>exactly</em> what happens in each. He helped me find the right path for me.<br/><br/>
+
+            But most people don't have older brothers to guide them. And that needed to change.<br/><br/>
+
+            So I built what I wish I had. It's not a fix, it's not perfect, but its impact quickly made<br/>
+            itself known.<br/><br/>
+
+            If you're reading this, it's likely that my website helped you. I'm glad it did.<br/>
+            If it inspired you to make a change, even better.<br/><br/>
+
+            You don't need to wait for the adults of the world to fix the systems that hold you back;<br/>
+            that may never happen. But be aware that these systems themselves prevent their own fixing.<br/>
+            It took 6 months of back-and-forth with HDSB to receive permission for this project,<br/>
+            and I had to do it all with no student data. No staff-level authorization. No budget.<br/>
+            No unregulated inputs. No shortcuts.<br/><br/>
+
+            Fixing systems in your community is difficult; if it wasn't, the fix would have been made already.<br/><br/>
+
+            But that doesn't mean you <em>shouldn't</em> try.<br/>
+            You don’t need permission to care, nor others to encourage your work.<br/>
+            You don’t need resources to start. You just need the determination to whisper<br/>
+            loud enough for the world to finally hear.<br/><br/>
+
+            Start whispering, and echoes will follow.
           </span>
         </div>
       </div>
