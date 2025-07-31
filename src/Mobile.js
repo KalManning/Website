@@ -75,7 +75,7 @@ useEffect(() => {
 
   return (
     <div className="App min-h-screen flex flex-col overflow-hidden">
-      <div className="flex gap-9 items-center bg-gray-300">
+      <div className="flex gap-11 items-center bg-gray-300">
         <a
           href="https://hdsb.elearningontario.ca/d2l/home/3200161"
           target="_blank"
@@ -110,22 +110,15 @@ useEffect(() => {
         >
           <img
             src="/hdsb.png"
-            alt="School Websites"
+            alt="School Sites"
             className="h-6 w-auto"
           />
           School Websites
         </a>
-        <a
-              href="https://www.dcp.edu.gov.on.ca/en/curriculum#secondary"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline text-blue-700"
-            >
-              Ontario Curriculum
-            </a>
+        
       </div>
       <header className="App-header flex flex-col flex-grow items-center space-y-6 p-6">
-        <div className="absolute top-12 right-4">
+        <div className="absolute top-15 right-4">
           <button
             onClick={() => setShowMenu(true)}
             className="text-black bg-gray-100 text-3xl w-12 h-12 rounded hover:bg-gray-200"
@@ -266,7 +259,7 @@ useEffect(() => {
     >
       <option value="">Unique Post-Secondary Requirement</option>
       <option value="McMaster Health Science: non-math, non-science, non-tech">
-        McMaster Health Science: non-math, non-science, non-tech
+        McMaster Health Science: non-math/science/tech
       </option>
       <option value="2 of 3: Chemistry, Physics, Biology">
         2 of 3: Chemistry, Physics, Biology
@@ -281,7 +274,7 @@ useEffect(() => {
             checked={frenchImmersion}
             onChange={() => setFrenchImmersion((prev) => !prev)}
           />
-          <span>French Immersion Credit</span>
+          <span>French Immersion</span>
         </label>
       </div>
       <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
@@ -923,7 +916,7 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
         </div>
       )}
 <Analytics />
-{showBackToTop && (
+{showBackToTop && !selectedCourse && !showDisclaimer && !showDiary && !showMenu && !showSuggestions && (
   <button
     onClick={fastSmoothScrollToTop}
     className="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition"

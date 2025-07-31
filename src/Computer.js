@@ -124,7 +124,7 @@ useEffect(() => {
             </a>
       </div>
       <header className="App-header flex flex-col flex-grow items-center space-y-6 p-6">
-        <div className="absolute top-12 right-4">
+        <div className="absolute top-15 right-4">
           <button
             onClick={() => setShowMenu(true)}
             className="text-black bg-gray-100 text-3xl w-12 h-12 rounded hover:bg-gray-200"
@@ -921,7 +921,7 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
         </div>
       )}
 <Analytics />
-{showBackToTop && (
+{showBackToTop && !selectedCourse && !showDisclaimer && !showDiary && !showMenu && !showSuggestions && (
   <button
     onClick={fastSmoothScrollToTop}
     className="fixed top-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition"
