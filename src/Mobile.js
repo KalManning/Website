@@ -118,7 +118,7 @@ useEffect(() => {
         
       </div>
       <header className="App-header flex flex-col flex-grow items-center space-y-6 p-6">
-        <div className="absolute top-15 right-4">
+        <div className="absolute top-[3.2rem] right-4">
           <button
             onClick={() => setShowMenu(true)}
             className="text-black bg-gray-100 text-3xl w-12 h-12 rounded hover:bg-gray-200"
