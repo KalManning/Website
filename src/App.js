@@ -4,7 +4,7 @@ import Computer from './Computer'
 import { useState, useEffect } from 'react';
 import { Analytics } from "@vercel/analytics/react"
 import { track } from "@vercel/analytics";
-function useIsMobile(breakpoint = 1200) {
+function useIsMobile(breakpoint = 1100) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < breakpoint);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < breakpoint);

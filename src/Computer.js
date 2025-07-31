@@ -264,7 +264,7 @@ useEffect(() => {
     >
       <option value="">Unique Post-Secondary Requirement</option>
       <option value="McMaster Health Science: non-math, non-science, non-tech">
-        McMaster Health Science: non-math, non-science, non-tech
+        McMaster Health Science: non-math/science/stem
       </option>
       <option value="2 of 3: Chemistry, Physics, Biology">
         2 of 3: Chemistry, Physics, Biology
@@ -279,7 +279,7 @@ useEffect(() => {
             checked={frenchImmersion}
             onChange={() => setFrenchImmersion((prev) => !prev)}
           />
-          <span>French Immersion Credit</span>
+          <span>French Immersion</span>
         </label>
       </div>
       <div className="bg-white rounded-lg px-4 py-2 border border-gray-300 flex items-center gap-4">
