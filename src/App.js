@@ -33,7 +33,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxvynn4u-mwPRSKI7cgCP-SqT_HsR7__f-AFKbjyeTpoFKqMP0ZG66NeHgG8TJJ2JEPPA/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbxW_H-C3O0-_eCiv77iWCtLVzmVqzeSiwjvPo2Nq48edWpsdyoigKdqDRSFlbKnYeFkdw/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -66,9 +66,53 @@ useEffect(() => {
   const [showSimilars, setShowSimilars] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showTests, setShowTests] = useState(false);
+  const [sectionLoading, setSectionLoading] = useState(null);
 
+const handleShowMore = (section) => {
+  if (!selectedCourse || !courseDetails) return;
 
-  
+  setSectionLoading(section); // 👈 Show loading for this section
+
+  const prevSource = courseDetails?.timestamp
+    ? new Date(courseDetails.timestamp).toISOString()
+    : "";
+  const school = selectedSchool;
+  const course = selectedCourse;
+  const callbackName = `jsonp_callback_${Date.now()}`;
+
+  window[callbackName] = (result) => {
+    setSectionLoading(null); // 👈 Clear loading state
+
+    if (result.result === "found") {
+      setCourseDetails((prev) => {
+  const prevList = Array.isArray(prev[section]) ? prev[section] : [];
+
+  return {
+    ...prev,
+    [section]: [
+      ...prevList,
+      {
+        content: result.content,
+        school: result.meta?.school || "",
+        year: result.meta?.year || null
+      }
+    ],
+    timestamp: result.timestamp // update global timestamp
+  };
+});
+
+    } else {
+      alert("No additional info found.");
+    }
+    delete window[callbackName];
+    document.body.removeChild(script);
+  };
+
+  const script = document.createElement('script');
+  script.src = `https://script.google.com/macros/s/AKfycbxW_H-C3O0-_eCiv77iWCtLVzmVqzeSiwjvPo2Nq48edWpsdyoigKdqDRSFlbKnYeFkdw/exec?mode=section&course=${course}&school=${school}&prevSource=${encodeURIComponent(prevSource)}&section=${section}&callback=${callbackName}`;
+  document.body.appendChild(script);
+};
+
   const handleCourseClick = (course, name, hasVideo) => {
      track('course_click', { course, name });
     setSelectedCourse(course);
@@ -78,7 +122,7 @@ useEffect(() => {
     if (!selectedSchool) return;
   
     fetch(
-      `https://script.google.com/macros/s/AKfycbxvynn4u-mwPRSKI7cgCP-SqT_HsR7__f-AFKbjyeTpoFKqMP0ZG66NeHgG8TJJ2JEPPA/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
+      `https://script.google.com/macros/s/AKfycbxW_H-C3O0-_eCiv77iWCtLVzmVqzeSiwjvPo2Nq48edWpsdyoigKdqDRSFlbKnYeFkdw/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
     )
       .then((res) => res.json())
       .then((result) => {
@@ -101,7 +145,8 @@ useEffect(() => {
   curriculumSource: result.alt?.curriculumSource || null,
   hasVideo: hasVideo,
 
-  videos: result.alt?.videos
+  videos: result.alt?.videos,
+  timestamp: result.alt?.timestamp || null
 });
   } else {
   setCourseDetails({
@@ -115,7 +160,8 @@ useEffect(() => {
     school: "",
     year: "",
     hasVideo: hasVideo,
-    videos: result.alt?.videos
+    videos: result.alt?.videos,
+  timestamp: result.alt?.timestamp || null
   });
 }
 
@@ -217,11 +263,14 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
           courses={courses}
           schoolCourses={schoolCourses}
           selectedSchool={selectedSchool}
+          sectionLoading={sectionLoading}
+          setSectionLoading={setSectionLoading}
           setSelectedSchool={setSelectedSchool}
           selectedCourse={selectedCourse}
           setSelectedCourse={setSelectedCourse}
           hasVideo={hasVideo}
           handleCourseClick={handleCourseClick}
+          handleShowMore={handleShowMore}
           courseDetails={courseDetails}
           setCourseDetails={setCourseDetails}
           loading={loading}
@@ -269,6 +318,8 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
           courses={courses}
           schoolCourses={schoolCourses}
           selectedSubjects={selectedSubjects}
+          sectionLoading={sectionLoading}
+          setSectionLoading={setSectionLoading}
           setSelectedSubjects={setSelectedSubjects}
           selectedSchool={selectedSchool}
           setSelectedSchool={setSelectedSchool}
@@ -276,6 +327,7 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
           setSelectedCourse={setSelectedCourse}
           hasVideo={hasVideo}
           handleCourseClick={handleCourseClick}
+          handleShowMore={handleShowMore}
           courseDetails={courseDetails}
           setCourseDetails={setCourseDetails}
           loading={loading}

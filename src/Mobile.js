@@ -5,11 +5,14 @@ import { useState, useEffect } from 'react';
 export default function Mobile({
   courses,
   schoolCourses,
+  sectionLoading,
+  
   selectedSchool,
   setSelectedSchool,
   selectedCourse,
   setSelectedCourse,
   selectedSubjects,
+  handleShowMore,
   setSelectedSubjects,
   hasVideo,
   handleCourseClick,
@@ -770,6 +773,17 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
                 <p className="text-sm italic text-gray-400 mt-1">
                   These activities may vary by teacher and year.
                 </p>
+                {sectionLoading === "activities" ? (
+                  <p className="text-blue-400 italic">Loading more…</p>
+                ) : (
+                  <button
+                    onClick={() => handleShowMore("activities")}
+                    className="mt-2 text-blue-600 hover:underline"
+                  >
+                    Show more
+                  </button>
+                )}
+
               </>
             ) : (
               <p className="text-gray-400 italic">No activities submitted for this course.</p>
@@ -809,8 +823,18 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
           </ul>
         </div>
         <p className="text-sm italic text-gray-400 mt-1">
-          These activities may vary by teacher and year.
+          These questions may vary by teacher and year.
         </p>
+        {sectionLoading === "questions" ? (
+                  <p className="text-blue-400 italic">Loading more…</p>
+                ) : (
+                  <button
+                    onClick={() => handleShowMore("questions")}
+                    className="mt-2 text-blue-600 hover:underline"
+                  >
+                    Show more
+                  </button>
+                )}
       </>
     ) : (
       <p className="text-gray-400 italic">No test question examples submitted for this course.</p>
@@ -847,6 +871,16 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
             <p className="text-gray-200">{courseDetails.differences}</p>
           </div>
         )}
+        {sectionLoading === "similars" ? (
+                  <p className="text-blue-400 italic">Loading more…</p>
+                ) : (
+                  <button
+                    onClick={() => handleShowMore("similars")}
+                    className="mt-2 text-blue-600 hover:underline"
+                  >
+                    Show more
+                  </button>
+                )}
       </>
     ) : (
       <p className="text-gray-400 italic">No similar courses submitted.</p>
@@ -875,6 +909,16 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
           <div className="max-w-[100ch] w-full mx-auto text-center">
             <p className="text-gray-100">{courseDetails.notes}</p>
           </div>
+          {sectionLoading === "notes" ? (
+                  <p className="text-blue-400 italic">Loading more…</p>
+                ) : (
+                  <button
+                    onClick={() => handleShowMore("notes")}
+                    className="mt-2 text-blue-600 hover:underline"
+                  >
+                    Show more
+                  </button>
+                )}
         </>
       ) : (
         <p className="text-gray-400 italic">No notes submitted for this course.</p>
