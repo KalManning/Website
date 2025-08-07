@@ -9,10 +9,14 @@ export default function Computer({
   setSelectedSchool,
   selectedCourse,
   sectionLoading,
-  
+  hideShowMore,
+  setHideShowMore,
   setSelectedCourse,
   selectedSubjects,
   setSelectedSubjects,
+  cancelShowMore,
+  activeScriptInfo,
+  setActiveScriptInfo,
   hasVideo,
   handleCourseClick,
   handleShowMore,
@@ -685,116 +689,138 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
       <p className="text-gray-400 italic">Loading activities…</p>
     ) : (
       <>
-        {/* Warning if course info is from another school, old, or missing */}
-        {(courseDetails === "none" ||
-          (courseDetails &&
-            courseDetails !== "error" &&
-            courseDetails.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) ||
-          (courseDetails &&
-            courseDetails !== "error" &&
-            courseDetails.year < minValidYear)) && (
-          <div className="mt-4 p-4 border border-yellow-400 bg-yellow-50 rounded-xl">
-            <p className="text-md font-semibold text-yellow-700">
-              Have you taken this course? Is the following information outdated, incorrect, or missing?
-            </p>
-            <a
-              href="https://docs.google.com/forms/d/e/1FAIpQLSfTqM4Z-KCO-kVblD7HByEi4BQgQrUGiKjR4f-FJQ_unxQmig/viewform?usp=header"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600 transition"
-            >
-              Suggest an addition
-            </a>
-          </div>
-        )}
-
-        {/* Contextual source info */}
-        {courseDetails !== "none" && courseDetails !== "error" && (
-          <>
-            {(() => {
-              const actualCodeUsed = courseDetails.sourceCode || courseDetails.alias || selectedCourse;
-
-              if (
-                courseDetails.school &&
-                actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase() &&
-                courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()
-              ) {
-                return (
-                  <p className="text-red-200">
-                    No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed} at {courseDetails.school}.
+        {Array.isArray(courseDetails.activities) && courseDetails.activities.length > 0 ? (
+  <>
+    
+      {courseDetails.activities.map((entry, idx) => (
+        <div key={idx} className="mb-6">
+          {/* Only show warnings for the first batch */}
+          {idx === 0 && (
+            <>
+              {/* Warning: Yellow box */}
+              {(courseDetails === "none" ||
+                (courseDetails &&
+                  courseDetails !== "error" &&
+                  courseDetails.activities?.[0]?.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) ||
+                (courseDetails &&
+                  courseDetails !== "error" &&
+                  courseDetails.activities?.[0]?.year < minValidYear)) && (
+                <div className="mb-4 p-4 border border-yellow-400 bg-yellow-50 rounded-xl">
+                  <p className="text-md font-semibold text-yellow-700">
+                    Have you taken this course? Is the following information outdated, incorrect, or missing?
                   </p>
-                );
-              }
-
-              if (
-                courseDetails.school?.trim().toLowerCase() === selectedSchool.trim().toLowerCase() &&
-                actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase()
-              ) {
-                return (
-                  <p className="text-red-200">
-                    No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed}.
-                  </p>
-                );
-              }
-
-              if (!courseDetails.school) {
-                return (
-                  <p className="text-red-200">
-                    No school-specific information on {selectedCourse}.
-                  </p>
-                );
-              }
-
-              if (courseDetails.school.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) {
-                return (
-                  <p className="text-red-200">
-                    No information on {selectedCourse} at {selectedSchool}, using other sources.
-                  </p>
-                );
-              }
-
-              return null;
-            })()}
-
-            {/* Show activities if available */}
-            {Array.isArray(courseDetails.activities) && courseDetails.activities.length > 0 ? (
-              <>
-                <p className="text-sm text-gray-300 italic mb-2">
-                  Based on data from {courseDetails.school}, {courseDetails.year}
-                </p>
-                <div
-                  className="w-full mx-auto text-left"
-                  style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities) }}
-                >
-                  <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
-                    {courseDetails.activities.map((act, idx) => (
-                      <li key={idx}>
-                        <strong>{act.title}</strong>
-                        {act.description ? ` – ${act.description}` : ''}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <p className="text-sm italic text-gray-400 mt-1">
-                  These activities may vary by teacher and year.
-                </p>
-                {sectionLoading === "activities" ? (
-                  <p className="text-blue-400 italic">Loading more…</p>
-                ) : (
-                  <button
-                    onClick={() => handleShowMore("activities")}
-                    className="mt-2 text-blue-600 hover:underline"
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSfTqM4Z-KCO-kVblD7HByEi4BQgQrUGiKjR4f-FJQ_unxQmig/viewform?usp=header"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600 transition"
                   >
-                    Show more
-                  </button>
-                )}
+                    Suggest an addition
+                  </a>
+                </div>
+              )}
 
-              </>
-            ) : (
-              <p className="text-gray-400 italic">No activities submitted for this course.</p>
-            )}
-          </>
-        )}
+              {/* Contextual source info */}
+              {(() => {
+                const actualCodeUsed =
+                  courseDetails.sourceCode || courseDetails.alias || selectedCourse;
+
+                if (
+                  courseDetails.activities?.[0]?.school?.trim() &&
+                  actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase() &&
+                  courseDetails.activities?.[0]?.school?.trim() !== selectedSchool.trim().toLowerCase()
+                ) {
+                  return (
+                    <p className="text-red-200 mb-2">
+                      No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed} at {courseDetails.activities?.[0]?.school?.trim()}.
+                    </p>
+                  );
+                }
+
+                if (
+                  courseDetails.activities?.[0]?.school?.trim().toLowerCase() === selectedSchool.trim().toLowerCase() &&
+                  actualCodeUsed.toUpperCase() !== selectedCourse.toUpperCase()
+                ) {
+                  return (
+                    <p className="text-red-200 mb-2">
+                      No information on {selectedCourse} at {selectedSchool}, using info from {actualCodeUsed}.
+                    </p>
+                  );
+                }
+
+                if (!courseDetails.activities?.[0]?.school?.trim()) {
+                  return (
+                    <p className="text-red-200 mb-2">
+                      No school-specific information on {selectedCourse}.
+                    </p>
+                  );
+                }
+
+                if (courseDetails.activities?.[0]?.school?.trim().toLowerCase() !== selectedSchool.trim().toLowerCase()) {
+                  return (
+                    <p className="text-red-200 mb-2">
+                      No information on {selectedCourse} at {selectedSchool}, using other sources.
+                    </p>
+                  );
+                }
+
+                return null;
+              })()}
+            </>
+          )}
+          {/* Activities content */}
+          <p className="text-sm text-gray-300 italic mb-1 text-center">
+            Based on data from {entry.school}, {entry.year}
+          </p>
+          <div
+            className="w-full mx-auto text-left"
+            style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities.flatMap(a => a.content)) }}
+          >
+          <ul className="list-disc list-inside space-y-2 text-white text-left">
+            {entry.content.map((act, i) => (
+              <li key={i}>
+                <strong>{act.title}</strong>
+                {act.description ? ` – ${act.description}` : ''}
+              </li>
+            ))}
+          </ul>
+          </div>
+        </div>
+      ))}
+
+    <p className="text-sm italic text-gray-400 mt-1">
+      These activities may vary by teacher and year.
+    </p>
+
+    {!hideShowMore["activities"] && (
+  sectionLoading === "activities" ? (
+    <div className="flex items-center gap-3 mt-2">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "activities" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <button
+      onClick={() => handleShowMore("activities")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button>
+  )
+)}
+
+  </>
+) : (
+  <p className="text-gray-400 italic">No activities submitted for this course.</p>
+)}
+
       </>
     )}
   </section>
@@ -814,32 +840,55 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
       <p className="text-gray-400 italic">Loading information…</p>
     ) : courseDetails !== "error" && courseDetails.questions && courseDetails.questions.length > 0 ? (
       <>
-        <p className="text-sm text-gray-300 italic mb-2">
-          Based on data from {courseDetails.school}, {courseDetails.year}
-        </p>
         <div
           className="w-full mx-auto text-left"
           style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.questions) }}
         >
-          <ul className="list-disc list-inside space-y-8 text-white text-left justify-center">
-            {courseDetails.questions.map((act, idx) => (
-              <li key={idx}>{act.title}</li>
+          <>
+            {courseDetails.questions.map((entry, idx) => (
+              <div key={idx} className="mb-6">
+                <p className="text-sm text-gray-300 italic mb-1 text-center">
+                  Based on data from {entry.school}, {entry.year}
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-white text-left">
+                  {entry.content.map((q, i) => (
+                    <li key={i}>
+                      {q.title}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </>
+
         </div>
         <p className="text-sm italic text-gray-400 mt-1">
           These questions may vary by teacher and year.
         </p>
-        {sectionLoading === "questions" ? (
-                  <p className="text-blue-400 italic">Loading more…</p>
-                ) : (
-                  <button
-                    onClick={() => handleShowMore("questions")}
-                    className="mt-2 text-blue-600 hover:underline"
-                  >
-                    Show more
-                  </button>
-                )}
+        {!hideShowMore["questions"] && (
+  sectionLoading === "questions" ? (
+    <div className="flex items-center gap-3 mt-2">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "questions" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <button
+      onClick={() => handleShowMore("questions")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button>
+  )
+)}
+
       </>
     ) : (
       <p className="text-gray-400 italic">No test question examples submitted for this course.</p>
@@ -862,11 +911,21 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     ) : courseDetails !== "none" && courseDetails !== "error" ? (
       <>
         {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 ? (
-          <ul className="flex flex-wrap gap-4 text-white text-center justify-center">
-            {courseDetails.similars.map((act, idx) => (
-              <li key={idx} className="list-none">{act.title}</li>
+          <>
+            {courseDetails.similars.map((entry, idx) => (
+              <div key={idx} className="mb-6">
+                <p className="text-sm text-gray-300 italic mb-1 text-center">
+                  Based on data from {entry.school}, {entry.year}
+                </p>
+                <ul className="flex flex-wrap gap-4 text-white text-center justify-center list-none">
+                  {entry.content.map((sim, i) => (
+                    <li key={i}>{sim.title}</li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </>
+
         ) : (
           <p className="text-gray-400 italic">No similar courses submitted.</p>
         )}
@@ -876,16 +935,30 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
             <p className="text-gray-200">{courseDetails.differences}</p>
           </div>
         )}
-        {sectionLoading === "similars" ? (
-                  <p className="text-blue-400 italic">Loading more…</p>
-                ) : (
-                  <button
-                    onClick={() => handleShowMore("similars")}
-                    className="mt-2 text-blue-600 hover:underline"
-                  >
-                    Show more
-                  </button>
-                )}
+        {!hideShowMore["similars"] && (
+  sectionLoading === "similars" ? (
+    <div className="flex items-center gap-3 mt-2">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "similars" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <button
+      onClick={() => handleShowMore("similars")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button>
+  )
+)}
+
       </>
     ) : (
       <p className="text-gray-400 italic">No similar courses submitted.</p>
@@ -906,24 +979,45 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     <>
       {courseDetails === null ? (
         <p className="text-gray-400 italic">Loading information…</p>
-      ) : courseDetails.notes?.trim() ? (
+      ) : Array.isArray(courseDetails.notes) && courseDetails.notes.length > 0 ? (
         <>
-          <p className="text-sm text-gray-300 italic mb-2">
-            Based on data from {courseDetails.school}, {courseDetails.year}
-          </p>
-          <div className="max-w-[100ch] w-full mx-auto text-center">
-            <p className="text-gray-100">{courseDetails.notes}</p>
-          </div>
-          {sectionLoading === "notes" ? (
-                  <p className="text-blue-400 italic">Loading more…</p>
-                ) : (
-                  <button
-                    onClick={() => handleShowMore("notes")}
-                    className="mt-2 text-blue-600 hover:underline"
-                  >
-                    Show more
-                  </button>
-                )}
+          <>
+            {courseDetails.notes.map((entry, idx) => (
+              <div key={idx} className="mb-6">
+                <p className="text-sm text-gray-300 italic mb-1 text-center">
+                  Based on data from {entry.school}, {entry.year}
+                </p>
+                <div className="max-w-[100ch] w-full mx-auto text-center">
+                  <p className="text-gray-100">{entry.content}</p>
+                </div>
+              </div>
+            ))}
+          </>
+
+          {!hideShowMore["notes"] && (
+  sectionLoading === "notes" ? (
+    <div className="flex items-center gap-3 mt-2 justify-center text-center">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "notes" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <button
+      onClick={() => handleShowMore("notes")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button>
+  )
+)}
+
         </>
       ) : (
         <p className="text-gray-400 italic">No notes submitted for this course.</p>

@@ -33,7 +33,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbxW_H-C3O0-_eCiv77iWCtLVzmVqzeSiwjvPo2Nq48edWpsdyoigKdqDRSFlbKnYeFkdw/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbzMaSwyiaT1yBxNDUQiM1nVk59BFHksPc8OM2VlGZTQwrFSe6NtE3zhqTQ2OVrF326ekQ/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -67,11 +67,23 @@ useEffect(() => {
   const [showNotes, setShowNotes] = useState(false);
   const [showTests, setShowTests] = useState(false);
   const [sectionLoading, setSectionLoading] = useState(null);
+  const [hideShowMore, setHideShowMore] = useState({});
+  const [activeScriptInfo, setActiveScriptInfo] = useState(null);
+const cancelShowMore = () => {
+  if (activeScriptInfo) {
+    const { script, callbackName } = activeScriptInfo;
+    if (window[callbackName]) window[callbackName] = () => {}; // Safe no-op
+
+    if (script?.parentNode) script.parentNode.removeChild(script);
+    setSectionLoading(null);
+    setActiveScriptInfo(null);
+  }
+};
 
 const handleShowMore = (section) => {
   if (!selectedCourse || !courseDetails) return;
 
-  setSectionLoading(section); // 👈 Show loading for this section
+  setSectionLoading(section);
 
   const prevSource = courseDetails?.timestamp
     ? new Date(courseDetails.timestamp).toISOString()
@@ -80,100 +92,134 @@ const handleShowMore = (section) => {
   const course = selectedCourse;
   const callbackName = `jsonp_callback_${Date.now()}`;
 
+  const script = document.createElement('script');
+  script.src = `https://script.google.com/macros/s/AKfycbzMaSwyiaT1yBxNDUQiM1nVk59BFHksPc8OM2VlGZTQwrFSe6NtE3zhqTQ2OVrF326ekQ/exec?mode=section&course=${course}&school=${school}&prevSource=${encodeURIComponent(prevSource)}&section=${section}&callback=${callbackName}`;
+
+  // Track the script and callback so it can be cancelled
+  setActiveScriptInfo({ section, script, callbackName });
+
   window[callbackName] = (result) => {
-    setSectionLoading(null); // 👈 Clear loading state
+    setSectionLoading(null);
+    setActiveScriptInfo(null);
 
     if (result.result === "found") {
-      setCourseDetails((prev) => {
-  const prevList = Array.isArray(prev[section]) ? prev[section] : [];
+      const { data, timestamp, meta } = result;
 
-  return {
-    ...prev,
-    [section]: [
-      ...prevList,
-      {
-        content: result.content,
-        school: result.meta?.school || "",
-        year: result.meta?.year || null
-      }
-    ],
-    timestamp: result.timestamp // update global timestamp
-  };
-});
+      setCourseDetails((prev) => {
+        const updated = { ...prev, timestamp };
+        ['activities', 'questions', 'similars', 'notes'].forEach((key) => {
+          const value = data[key];
+          if (!value || value.length === 0 || value === "") return;
+
+          const prevList = Array.isArray(prev[key]) ? prev[key] : [];
+
+          updated[key] = [
+            ...prevList,
+            {
+              content: value,
+              school: meta?.school || "",
+              year: meta?.year || null
+            }
+          ];
+        });
+
+        return updated;
+      });
 
     } else {
       alert("No additional info found.");
+      setHideShowMore(prev => ({ ...prev, [section]: true }));
     }
+
+    delete window[callbackName];
+    document.body.removeChild(script);
+  };
+
+  document.body.appendChild(script);
+};
+
+
+const handleCourseClick = (course, name, hasVideo) => {
+  track('course_click', { course, name });
+
+  setSelectedCourse(course);
+  setHasVideo(hasVideo);
+  setCourseDetails(null); // clear previous data
+
+  if (!selectedSchool) return;
+
+  const callbackName = `jsonp_callback_${Date.now()}`;
+
+  window[callbackName] = (result) => {
+    const safeData = result.data || {};
+    const sourceSchool = result.data?.school || "Unknown school";
+    const timestamp = result.alt?.timestamp || null;
+    const year = timestamp ? new Date(timestamp).getFullYear() : null;
+
+    if (
+      result.found === "school" || 
+      result.found === "other" || 
+      result.found === "schoolPrefix" || 
+      result.found === "otherPrefix"
+    ) {
+      setCourseDetails({
+        name: safeData.name || name,
+        curriculum: result.curriculum || [],
+        curriculumSource: result.alt?.curriculumSource || null,
+        alias: result.alt?.alias || null,
+        sourceSchool: sourceSchool,
+        sourceCode: result.alt?.sourceCode || null,
+        hasVideo: hasVideo,
+        videos: result.alt?.videos || [],
+        timestamp: timestamp,
+
+        activities: safeData.activities ? [{
+          content: safeData.activities,
+          school: sourceSchool,
+          year: year
+        }] : [],
+        notes: safeData.notes ? [{
+          content: safeData.notes,
+          school: sourceSchool,
+          year: year
+        }] : [],
+        questions: safeData.questions ? [{
+          content: safeData.questions,
+          school: sourceSchool,
+          year: year
+        }] : [],
+        similars: safeData.similars ? [{
+          content: safeData.similars,
+          school: sourceSchool,
+          year: year
+        }] : [],
+        differences: safeData.differences || "",
+      });
+    } else {
+      setCourseDetails({
+        name: name,
+        curriculum: result.curriculum || [],
+        curriculumSource: result.alt?.curriculumSource || null,
+        hasVideo: hasVideo,
+        videos: result.alt?.videos || [],
+        timestamp: timestamp,
+        activities: [],
+        notes: [],
+        questions: [],
+        similars: [],
+        differences: "",
+      });
+    }
+
     delete window[callbackName];
     document.body.removeChild(script);
   };
 
   const script = document.createElement('script');
-  script.src = `https://script.google.com/macros/s/AKfycbxW_H-C3O0-_eCiv77iWCtLVzmVqzeSiwjvPo2Nq48edWpsdyoigKdqDRSFlbKnYeFkdw/exec?mode=section&course=${course}&school=${school}&prevSource=${encodeURIComponent(prevSource)}&section=${section}&callback=${callbackName}`;
+  script.src = `https://script.google.com/macros/s/AKfycbzMaSwyiaT1yBxNDUQiM1nVk59BFHksPc8OM2VlGZTQwrFSe6NtE3zhqTQ2OVrF326ekQ/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}&callback=${callbackName}`;
   document.body.appendChild(script);
 };
 
-  const handleCourseClick = (course, name, hasVideo) => {
-     track('course_click', { course, name });
-    setSelectedCourse(course);
-    setHasVideo(hasVideo);
-    setCourseDetails(null); // clear previous data
-  
-    if (!selectedSchool) return;
-  
-    fetch(
-      `https://script.google.com/macros/s/AKfycbxW_H-C3O0-_eCiv77iWCtLVzmVqzeSiwjvPo2Nq48edWpsdyoigKdqDRSFlbKnYeFkdw/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}`
-    )
-      .then((res) => res.json())
-      .then((result) => {
-  console.log("Raw result from Apps Script:", result);
-
-  if (
-  result.found === "school" || 
-  result.found === "other" || 
-  result.found === "schoolPrefix" || 
-  result.found === "otherPrefix"
-) {
-
-    const safeData = result.data || {};
-    setCourseDetails({
-  ...safeData,
-  curriculum: result.curriculum || [],
-  alias: result.alt?.alias || null,
-  sourceSchool: result.alt?.sourceSchool || null,
-  sourceCode: result.alt?.sourceCode || null,
-  curriculumSource: result.alt?.curriculumSource || null,
-  hasVideo: hasVideo,
-
-  videos: result.alt?.videos,
-  timestamp: result.alt?.timestamp || null
-});
-  } else {
-  setCourseDetails({
-    name: name,
-    curriculum: result.curriculum || [],
-    curriculumSource: result.alt?.curriculumSource || null,
-    activities: [],
-    similars: [],
-    differences: "",
-    notes: "",
-    school: "",
-    year: "",
-    hasVideo: hasVideo,
-    videos: result.alt?.videos,
-  timestamp: result.alt?.timestamp || null
-  });
-}
-
-})
-
-
-
-      .catch((err) => {
-        console.error("Failed to load course info", err);
-        setCourseDetails("error");
-      });
-  };
 const getDynamicMaxChWidth = (items = []) => {
   const maxLen = items.reduce((max, val) => {
     const len = val?.length || 0;
@@ -261,6 +307,8 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
       {isMobile ? (
         <Mobile
           courses={courses}
+          activeScriptInfo={activeScriptInfo}
+          setActiveScriptInfo={setActiveScriptInfo}
           schoolCourses={schoolCourses}
           selectedSchool={selectedSchool}
           sectionLoading={sectionLoading}
@@ -269,8 +317,11 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
           selectedCourse={selectedCourse}
           setSelectedCourse={setSelectedCourse}
           hasVideo={hasVideo}
+          hideShowMore= {hideShowMore}
+          setHideShowMore={setHideShowMore}
           handleCourseClick={handleCourseClick}
           handleShowMore={handleShowMore}
+          cancelShowMore={cancelShowMore}
           courseDetails={courseDetails}
           setCourseDetails={setCourseDetails}
           loading={loading}
@@ -316,11 +367,16 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
       ) : (
         <Computer
           courses={courses}
+          activeScriptInfo={activeScriptInfo}
+          cancelShowMore={cancelShowMore}
+          setActiveScriptInfo={setActiveScriptInfo}
           schoolCourses={schoolCourses}
           selectedSubjects={selectedSubjects}
           sectionLoading={sectionLoading}
           setSectionLoading={setSectionLoading}
           setSelectedSubjects={setSelectedSubjects}
+          hideShowMore= {hideShowMore}
+          setHideShowMore={setHideShowMore}
           selectedSchool={selectedSchool}
           setSelectedSchool={setSelectedSchool}
           selectedCourse={selectedCourse}
