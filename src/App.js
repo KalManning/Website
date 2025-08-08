@@ -79,6 +79,17 @@ const cancelShowMore = () => {
     setActiveScriptInfo(null);
   }
 };
+// helper inside component
+const isContentEmpty = (content) => {
+  if (content == null) return true;
+  if (Array.isArray(content)) return content.length === 0;
+  if (typeof content === 'string') return content.trim().length === 0;
+  if (typeof content === 'object') {
+    // small safeguard for unexpected shapes
+    return Object.keys(content).length === 0;
+  }
+  return false;
+};
 
 const handleShowMore = (section) => {
   if (!selectedCourse || !courseDetails) return;
@@ -113,15 +124,28 @@ const handleShowMore = (section) => {
 
           const prevList = Array.isArray(prev[key]) ? prev[key] : [];
 
-          updated[key] = [
-            ...prevList,
-            {
-              content: value,
-              school: meta?.school || "",
-              year: meta?.year || null
-            }
-          ];
+          if (key === 'similars') {
+            updated[key] = [
+              ...prevList,
+              {
+                content: value,
+                differences: data.differences || "",
+                school: meta?.school || "",
+                year: meta?.year || null
+              }
+            ];
+          } else {
+            updated[key] = [
+              ...prevList,
+              {
+                content: value,
+                school: meta?.school || "",
+                year: meta?.year || null
+              }
+            ];
+          }
         });
+
 
         return updated;
       });
@@ -179,9 +203,9 @@ const handleCourseClick = (course, name, hasVideo) => {
           year: year
         }] : [],
         notes: safeData.notes ? [{
-          content: safeData.notes,
+          content: Array.isArray(safeData.notes) ? safeData.notes : [safeData.notes],
           school: sourceSchool,
-          year: year
+          year
         }] : [],
         questions: safeData.questions ? [{
           content: safeData.questions,
@@ -190,10 +214,10 @@ const handleCourseClick = (course, name, hasVideo) => {
         }] : [],
         similars: safeData.similars ? [{
           content: safeData.similars,
+          differences: safeData.differences || "",
           school: sourceSchool,
           year: year
         }] : [],
-        differences: safeData.differences || "",
       });
     } else {
       setCourseDetails({
@@ -300,13 +324,17 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
     }
   }, [selectedSchool, courses, touchedCourseList]);  
   
-  const closeSidebar = () => setSelectedCourse(null);
+  const closeSidebar = () => {
+  setSelectedCourse(null);
+  setHideShowMore({}); // reset all hidden "show more" buttons
+};
 
   return (
     <div className="App">
       {isMobile ? (
         <Mobile
           courses={courses}
+          isContentEmpty={isContentEmpty}
           activeScriptInfo={activeScriptInfo}
           setActiveScriptInfo={setActiveScriptInfo}
           schoolCourses={schoolCourses}
@@ -367,6 +395,7 @@ const getDynamicMaxChWidthFromActivities = (activities = []) => {
       ) : (
         <Computer
           courses={courses}
+          isContentEmpty={isContentEmpty}
           activeScriptInfo={activeScriptInfo}
           cancelShowMore={cancelShowMore}
           setActiveScriptInfo={setActiveScriptInfo}

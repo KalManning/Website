@@ -7,6 +7,7 @@ export default function Mobile({
   schoolCourses,
   sectionLoading,
   hideShowMore,
+  isContentEmpty,
   setHideShowMore,
   selectedSchool,
   setSelectedSchool,
@@ -685,6 +686,38 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     ) : (
       <>
         {Array.isArray(courseDetails.activities) && courseDetails.activities.length > 0 ? (
+          courseDetails.activities.every(entry => !entry.content || entry.content.length === 0) ? (
+    
+    !hideShowMore["activities"] ? (
+  sectionLoading === "activities" ? (
+    <div className="flex items-center gap-3 mt-2 justify-center text-center">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "activities" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <>
+    <p className="text-gray-400 italic">
+      No information found during initial search. Click 'show more' to find info, if any.
+    </p>
+    <button
+      onClick={() => handleShowMore("activities")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button></>
+  )
+):(<p className="text-gray-400 italic">
+      No information found.
+    </p>)
+  ) : (
   <>
     
       {courseDetails.activities.map((entry, idx) => (
@@ -768,9 +801,9 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
             Based on data from {entry.school}, {entry.year}
           </p>
           <div
-      className="w-full mx-auto text-left"
-      style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities.flatMap(a => a.content)) }}
-    >
+            className="w-full mx-auto text-left"
+            style={{ maxWidth: getDynamicMaxChWidthFromActivities(courseDetails.activities.flatMap(a => a.content)) }}
+          >
           <ul className="list-disc list-inside space-y-2 text-white text-left">
             {entry.content.map((act, i) => (
               <li key={i}>
@@ -779,6 +812,9 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
               </li>
             ))}
           </ul>
+          <div className="pt-4">
+  <hr className="border-t border-gray-400 w-full max-w-xl mx-auto mb-4" />
+</div>
           </div>
         </div>
       ))}
@@ -811,9 +847,23 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
   )
 )}
 
-  </>
+  </>)
 ) : (
-  <p className="text-gray-400 italic">No activities submitted for this course.</p>
+  <><div className="mb-4 p-4 border border-yellow-400 bg-yellow-50 rounded-xl">
+                  <p className="text-md font-semibold text-yellow-700">
+                    Have you taken this course? Is the following information outdated, incorrect, or missing?
+                  </p>
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSfTqM4Z-KCO-kVblD7HByEi4BQgQrUGiKjR4f-FJQ_unxQmig/viewform?usp=header"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded hover:bg-yellow-600 transition"
+                  >
+                    Suggest an addition
+                  </a>
+                    
+
+                </div><p className="text-gray-400 italic">No activities submitted for this course.</p></>
 )}
 
       </>
@@ -834,6 +884,38 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     {courseDetails === null ? (
       <p className="text-gray-400 italic">Loading information…</p>
     ) : courseDetails !== "error" && courseDetails.questions && courseDetails.questions.length > 0 ? (
+      courseDetails.questions.every(entry => !entry.content || entry.content.length === 0) ? (
+    
+    !hideShowMore["questions"] ? (
+  sectionLoading === "questions" ? (
+    <div className="flex items-center gap-3 mt-2 justify-center text-center">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "questions" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <>
+    <p className="text-gray-400 italic">
+      No information found during initial search. Click 'show more' to find info, if any.
+    </p>
+    <button
+      onClick={() => handleShowMore("questions")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button></>
+  )
+):(<p className="text-gray-400 italic">
+      No information found.
+    </p>)
+  ) : (
       <>
         <div
           className="w-full mx-auto text-left"
@@ -852,6 +934,9 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
                     </li>
                   ))}
                 </ul>
+                <div className="pt-4">
+  <hr className="border-t border-gray-400 w-full max-w-xl mx-auto mb-4" />
+</div>
               </div>
             ))}
           </>
@@ -884,7 +969,7 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
   )
 )}
 
-      </>
+      </>)
     ) : (
       <p className="text-gray-400 italic">No test question examples submitted for this course.</p>
     )}
@@ -906,31 +991,64 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     ) : courseDetails !== "none" && courseDetails !== "error" ? (
       <>
         {Array.isArray(courseDetails.similars) && courseDetails.similars.length > 0 ? (
+          courseDetails.similars.every(entry => !entry.content || entry.content.length === 0) ? (
+    
+    !hideShowMore["similars"] ? (
+  sectionLoading === "similars" ? (
+    <div className="flex items-center gap-3 mt-2 justify-center text-center">
+  <p className="text-blue-400 italic">Loading more…</p>
+  {activeScriptInfo?.section === "similars" && (
+    <button
+      onClick={cancelShowMore}
+      className="text-red-400 underline hover:text-red-600 text-sm"
+    >
+      Cancel
+    </button>
+  )}
+</div>
+
+  ) : (
+    <>
+    <p className="text-gray-400 italic">
+      No information found during initial search. Click 'show more' to find info, if any.
+    </p>
+    <button
+      onClick={() => handleShowMore("similars")}
+      className="mt-2 text-blue-600 hover:underline"
+    >
+      Show more
+    </button></>
+  )
+):(<p className="text-gray-400 italic">
+      No information found.
+    </p>)
+  ) : (
           <>
             {courseDetails.similars.map((entry, idx) => (
-              <div key={idx} className="mb-6">
-                <p className="text-sm text-gray-300 italic mb-1 text-center">
-                  Based on data from {entry.school}, {entry.year}
-                </p>
-                <ul className="flex flex-wrap gap-4 text-white text-center justify-center list-none">
-                  {entry.content.map((sim, i) => (
-                    <li key={i}>{sim.title}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </>
+  <div key={idx} className="mb-6">
+    <p className="text-sm text-gray-300 italic mb-1 text-center">
+      Based on data from {entry.school}, {entry.year}
+    </p>
 
-        ) : (
-          <p className="text-gray-400 italic">No similar courses submitted.</p>
-        )}
+    <ul className="flex flex-wrap gap-4 text-white text-center justify-center list-none">
+      {Array.isArray(entry.content) && entry.content.map((similar, i) => (
+        <li key={i}>
+          {typeof similar === "string" ? similar : similar.title}
+        </li>
+      ))}
+    </ul>
 
-        {courseDetails.differences?.trim() && (
-          <div className="max-w-[100ch] w-full mx-auto text-center">
-            <p className="text-gray-200">{courseDetails.differences}</p>
-          </div>
-        )}
-        {!hideShowMore["similars"] && (
+    {entry.differences && (
+      <p className="max-w-[100ch] w-full mx-auto text-center justify-center mt-2 text-gray-300 text-sm">{entry.differences}</p>
+    )}
+    <div className="pt-4">
+  <hr className="border-t border-gray-400 w-full max-w-xl mx-auto mb-4" />
+</div>
+  </div>
+  
+))}
+
+            {!hideShowMore["similars"] && (
   sectionLoading === "similars" ? (
     <div className="flex items-center gap-3 mt-2 justify-center text-center">
   <p className="text-blue-400 italic">Loading more…</p>
@@ -953,7 +1071,12 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
     </button>
   )
 )}
+          </>)
 
+        ) : (
+          <p className="text-gray-400 italic">No similar courses submitted.</p>
+        )}
+        
       </>
     ) : (
       <p className="text-gray-400 italic">No similar courses submitted.</p>
@@ -971,54 +1094,78 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
   </h3>
 
   {showNotes && (
-    <>
-      {courseDetails === null ? (
-        <p className="text-gray-400 italic">Loading information…</p>
-      ) : Array.isArray(courseDetails.notes) && courseDetails.notes.length > 0 ? (
-        <>
-          <>
-            {courseDetails.notes.map((entry, idx) => (
-              <div key={idx} className="mb-6">
-                <p className="text-sm text-gray-300 italic mb-1 text-center">
-                  Based on data from {entry.school}, {entry.year}
-                </p>
-                <div className="max-w-[100ch] w-full mx-auto text-center">
-                  <p className="text-gray-100">{entry.content}</p>
-                </div>
+  <>
+    {courseDetails === null ? (
+      <p className="text-gray-400 italic">Loading information…</p>
+    ) : Array.isArray(courseDetails.notes) && courseDetails.notes.length > 0 ? (
+      // if every entry's content is empty, show the "no info found" filler
+      courseDetails.notes.every(entry => isContentEmpty(entry?.content)) ? (
+          !hideShowMore["notes"] ? (
+            sectionLoading === "notes" ? (
+              <div className="flex items-center gap-3 mt-2 justify-center text-center">
+                <p className="text-blue-400 italic">Loading more…</p>
+                {activeScriptInfo?.section === "notes" && (
+                  <button onClick={cancelShowMore} className="text-red-400 underline hover:text-red-600 text-sm">
+                    Cancel
+                  </button>
+                )}
               </div>
-            ))}
-          </>
+            ) : (
+              <><p className="text-gray-400 italic">
+            No information found during initial search. Click 'show more' to find info, if any.
+          </p>
+          <button onClick={() => handleShowMore("notes")} className="mt-2 text-blue-600 hover:underline">
+                Show more
+              </button></>
+              
+            )
+          ):(<p className="text-gray-400 italic">
+            No information found.
+          </p>)
+        
+      ) : (
+        <>
+          {courseDetails.notes.map((entry, idx) => (
+            <div key={idx} className="mb-6">
+              <p className="text-sm text-gray-300 italic mb-1 text-center">
+                Based on data from {entry.school}, {entry.year}
+              </p>
+              <div className="max-w-[100ch] w-full mx-auto text-center">
+                {Array.isArray(entry.content) ? (
+                  entry.content.map((c, i) => <p key={i} className="text-gray-100">{c}</p>)
+                ) : (
+                  <p className="text-gray-100">{entry.content}</p>
+                )}
+              </div>
+              <div className="pt-4">
+  <hr className="border-t border-gray-400 w-full max-w-xl mx-auto mb-4" />
+</div>
+            </div>
+          ))}
 
           {!hideShowMore["notes"] && (
-  sectionLoading === "notes" ? (
-    <div className="flex items-center gap-3 mt-2 justify-center text-center">
-  <p className="text-blue-400 italic">Loading more…</p>
-  {activeScriptInfo?.section === "notes" && (
-    <button
-      onClick={cancelShowMore}
-      className="text-red-400 underline hover:text-red-600 text-sm"
-    >
-      Cancel
-    </button>
-  )}
-</div>
-
-  ) : (
-    <button
-      onClick={() => handleShowMore("notes")}
-      className="mt-2 text-blue-600 hover:underline"
-    >
-      Show more
-    </button>
-  )
-)}
-
+            sectionLoading === "notes" ? (
+              <div className="flex items-center gap-3 mt-2 justify-center text-center">
+                <p className="text-blue-400 italic">Loading more…</p>
+                {activeScriptInfo?.section === "notes" && (
+                  <button onClick={cancelShowMore} className="text-red-400 underline hover:text-red-600 text-sm">
+                    Cancel
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button onClick={() => handleShowMore("notes")} className="mt-2 text-blue-600 hover:underline">
+                Show more
+              </button>
+            )
+          )}
         </>
-      ) : (
-        <p className="text-gray-400 italic">No notes submitted for this course.</p>
-      )}
-    </>
-  )}
+      )
+    ) : (
+      <p className="text-gray-400 italic">No notes submitted for this course.</p>
+    )}
+  </>
+)}
 </div>
 
               {hasVideo&& (
