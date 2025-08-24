@@ -33,7 +33,7 @@ useEffect(() => {
     } else {
       console.log("Fetching from server...");
       try {
-        const res = await fetch("https://script.google.com/macros/s/AKfycbzMaSwyiaT1yBxNDUQiM1nVk59BFHksPc8OM2VlGZTQwrFSe6NtE3zhqTQ2OVrF326ekQ/exec");
+        const res = await fetch("https://script.google.com/macros/s/AKfycbwW_b1OnRIEFPZ5-NfJB28H9ddRFV2hjIMJM5OXqxE6vB-43ORq99FrYDDp_3Ufc3O_Jw/exec");
         const data = await res.json();
         setSchoolCourses(data);
         sessionStorage.setItem('schoolCourses', JSON.stringify(data));
@@ -104,7 +104,7 @@ const handleShowMore = (section) => {
   const callbackName = `jsonp_callback_${Date.now()}`;
 
   const script = document.createElement('script');
-  script.src = `https://script.google.com/macros/s/AKfycbzMaSwyiaT1yBxNDUQiM1nVk59BFHksPc8OM2VlGZTQwrFSe6NtE3zhqTQ2OVrF326ekQ/exec?mode=section&course=${course}&school=${school}&prevSource=${encodeURIComponent(prevSource)}&section=${section}&callback=${callbackName}`;
+  script.src = `https://script.google.com/macros/s/AKfycbwW_b1OnRIEFPZ5-NfJB28H9ddRFV2hjIMJM5OXqxE6vB-43ORq99FrYDDp_3Ufc3O_Jw/exec?mode=section&course=${course}&school=${school}&prevSource=${encodeURIComponent(prevSource)}&section=${section}&callback=${callbackName}`;
 
   // Track the script and callback so it can be cancelled
   setActiveScriptInfo({ section, script, callbackName });
@@ -240,7 +240,7 @@ const handleCourseClick = (course, name, hasVideo) => {
   };
 
   const script = document.createElement('script');
-  script.src = `https://script.google.com/macros/s/AKfycbzMaSwyiaT1yBxNDUQiM1nVk59BFHksPc8OM2VlGZTQwrFSe6NtE3zhqTQ2OVrF326ekQ/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}&callback=${callbackName}`;
+  script.src = `https://script.google.com/macros/s/AKfycbwW_b1OnRIEFPZ5-NfJB28H9ddRFV2hjIMJM5OXqxE6vB-43ORq99FrYDDp_3Ufc3O_Jw/exec?course=${course}&school=${selectedSchool}&hasVideo=${hasVideo}&callback=${callbackName}`;
   document.body.appendChild(script);
 };
 
