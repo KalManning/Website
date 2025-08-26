@@ -513,7 +513,9 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
   target="_blank"
   rel="noopener noreferrer"
   className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow w-full text-left"
-></a>
+>
+  Resources For Staff
+</a>
 {/* Diary of a Ghost */}
 <div className="fixed bottom-4 right-4">
   <button
