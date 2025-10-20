@@ -504,7 +504,7 @@ For official HDSB curriculum and policies, please visit HDSB's official website.
   Give Website Feedback
 </a>
 <a
-  href="https://docs.google.com/presentation/d/19dE4OXNZR5C8EfGJmSuAGXZuLYtdphv5TCm-zwOhbgI/edit?slide=id.ged3401ed36_1_0#slide=id.ged3401ed36_1_0"
+  href="https://docs.google.com/presentation/d/19dE4OXNZR5C8EfGJmSuAGXZuLYtdphv5TCm-zwOhbgI/edit?usp=sharing"
   target="_blank"
   rel="noopener noreferrer"
   className="border-gray-600 bg-gray-700 hover:bg-blue-600 text-white px-4 py-2 rounded-lg shadow w-full text-left"
