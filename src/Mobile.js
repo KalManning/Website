@@ -313,6 +313,14 @@ useEffect(() => {
   <><p className="text-center text-gray-600 mb-2 italic">
     Displaying {courses.length} course{courses.length !== 1 ? 's' : ''}
   </p>
+  {(selectedPathway === "College" || selectedPathway === "University") && (
+  <p className="text-red-600 text-sm italic mt-2 text-center">
+    Note: your "{selectedPathway}" filter will only display{" "}
+    {selectedPathway === "University" ? "U/M" : "U/M/C"} courses. You are
+    encouraged to also explore open level courses as electives.
+  </p>
+)}
+
   <hr className="border-t border-gray-400 w-full max-w-xl mx-auto mb-4" /></>
   
 )}
